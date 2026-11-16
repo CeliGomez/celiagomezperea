@@ -1,0 +1,20 @@
+---
+// Separador entre bandas claras: una línea fina a todo el ancho del contenedor, con un tramo dorado al inicio.
+const { class: clase = '' } = Astro.props
+---
+
+<div class:list={['separador contenedor', clase]} aria-hidden="true">
+	<span class="separador__linea"></span>
+</div>
+
+<style>
+	.separador {
+		display: block;
+	}
+
+	.separador__linea {
+		display: block;
+		height: 1px;
+		background: linear-gradient(to right, var(--dorado) 0 4rem, var(--color-line) 4rem 100%);
+	}
+</style>

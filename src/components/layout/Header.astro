@@ -1,0 +1,642 @@
+---
+import Firma from './Firma.astro'
+import { rutas } from '../../lib/rutas.js'
+
+// heroAzul: la página empieza con una banda azul.
+const { instagram = '', vimeo = '', heroAzul = false } = Astro.props
+
+const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/'
+const enSeccion = (base) => pathname === base || pathname.startsWith(`${base}/`)
+
+// La sección activa sale de la URL. Cuadros incluye cada serie; Ilustraciones, la disciplina de papel.
+const nav = [
+	{ id: 'inicio', href: rutas.inicio, label: 'Inicio', activo: pathname === '/' },
+	{ id: 'cuadros', href: rutas.cuadros, label: 'Cuadros', activo: enSeccion('/series') || pathname === '/obras/pinturas' },
+	{
+		id: 'ilustraciones',
+		href: rutas.ilustraciones,
+		label: 'Ilustraciones',
+		activo: pathname === rutas.ilustraciones,
+	},
+	{ id: 'audiovisual', href: rutas.audiovisual, label: 'Audiovisual', activo: enSeccion('/audiovisual') },
+	{ id: 'sobre', href: rutas.sobreMi, label: 'La artista', activo: enSeccion('/sobre-mi') },
+	{ id: 'contacto', href: rutas.contacto, label: 'Contacto', activo: enSeccion('/contacto') },
+]
+
+const redes = [
+	{ href: instagram, label: 'Instagram' },
+	{ href: vimeo, label: 'Vimeo' },
+].filter((item) => item.href)
+---
+
+<header class:list={['site-header', heroAzul ? 'site-header--hero' : 'site-header--claro']} data-header>
+	<div class="site-header__bar contenedor">
+		<a class="marca" href="/" aria-label="Celia Gómez Perea, inicio">
+			<Firma class="marca__firma" />
+		</a>
+		<span class="marca__linea" aria-hidden="true"></span>
+
+		<nav class="site-nav" aria-label="Principal">
+			<ul class="site-nav__lista">
+				{
+					nav.map((item) => (
+						<li>
+							<a
+								href={item.href}
+								class:list={['site-nav__link', { 'is-active': item.activo }]}
+								aria-current={item.activo ? 'page' : undefined}
+							>
+								{item.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+
+		<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-menu">
+			<span data-menu-texto>Menú</span>
+		</button>
+	</div>
+
+	<div
+		id="site-menu"
+		class="menu-panel ctx-azul ctx-azul--profundo textura"
+		data-menu-panel
+		hidden
+		role="dialog"
+		aria-modal="true"
+		aria-label="Menú"
+	>
+		<nav class="menu-panel__nav contenedor" aria-label="Secciones">
+			<ul class="menu-lista">
+				{
+					nav.map((item) => (
+						<li>
+							<a
+								href={item.href}
+								class:list={['menu-link', { 'is-active': item.activo }]}
+								aria-current={item.activo ? 'page' : undefined}
+							>
+								{item.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+			{
+				redes.length > 0 && (
+					<ul class="menu-redes">
+						{redes.map((item) => (
+							<li>
+								<a class="enlace-caps" href={item.href} target="_blank" rel="noopener noreferrer">
+									{item.label}
+									<span class="sr-only">(se abre en otra pestaña)</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				)
+			}
+		</nav>
+	</div>
+</header>
+
+<script>
+	const header = document.querySelector('[data-header]')
+
+	if (header) {
+		const toggle = header.querySelector('[data-menu-toggle]')
+		const texto = header.querySelector('[data-menu-texto]')
+		const panel = header.querySelector('[data-menu-panel]')
+		const desktop = window.matchMedia('(min-width: 64rem)')
+
+		const focables = () => {
+			if (!toggle || !panel) return []
+			const internos = [...panel.querySelectorAll('a, button')].filter((el) => !el.closest('[hidden]'))
+			return [toggle, ...internos]
+		}
+
+		const setOpen = (open) => {
+			if (!toggle || !panel) return
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
+			if (texto) texto.textContent = open ? 'Cerrar' : 'Menú'
+			panel.hidden = !open
+			document.body.classList.toggle('menu-open', open)
+			header.classList.toggle('is-open', open)
+			document.querySelector('main')?.toggleAttribute('inert', open)
+			document.querySelector('footer')?.toggleAttribute('inert', open)
+			if (open) focables()[1]?.focus()
+		}
+
+		const atrapar = (event) => {
+			if (event.key !== 'Tab' || panel?.hidden) return
+			const lista = focables()
+			if (lista.length < 2) return
+			const primero = lista[0]
+			const ultimo = lista[lista.length - 1]
+			const actual = document.activeElement
+			if (event.shiftKey && (actual === primero || !panel.contains(actual))) {
+				event.preventDefault()
+				ultimo.focus()
+			} else if (!event.shiftKey && actual === ultimo) {
+				event.preventDefault()
+				primero.focus()
+			}
+		}
+
+		toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'))
+		toggle?.addEventListener('keydown', atrapar)
+		panel?.addEventListener('keydown', atrapar)
+		panel?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)))
+		desktop.addEventListener('change', (event) => {
+			if (event.matches) setOpen(false)
+		})
+
+		// "Obra" dentro del panel móvil: se despliega en el lugar.
+		const menuObra = header.querySelector('[data-menu-obra]')
+		menuObra?.addEventListener('click', () => {
+			const abierto = menuObra.getAttribute('aria-expanded') === 'true'
+			menuObra.setAttribute('aria-expanded', abierto ? 'false' : 'true')
+			const lista = document.getElementById(menuObra.getAttribute('aria-controls'))
+			if (lista) lista.hidden = abierto
+		})
+
+		// Desplegable "Obra" en escritorio: hover, click y teclado (Enter, Escape y flechas).
+		const desplegable = header.querySelector('[data-desplegable]')
+		const boton = desplegable?.querySelector('[data-desplegable-boton]')
+		const menu = desplegable?.querySelector('[data-desplegable-menu]')
+		const links = menu ? [...menu.querySelectorAll('a')] : []
+		let cierre = 0
+
+		const abrirMenu = (abrir) => {
+			if (!boton || !menu) return
+			window.clearTimeout(cierre)
+			boton.setAttribute('aria-expanded', abrir ? 'true' : 'false')
+			menu.hidden = !abrir
+		}
+		const abierto = () => boton?.getAttribute('aria-expanded') === 'true'
+		const enfocar = (indice) => links[(indice + links.length) % links.length]?.focus()
+
+		if (desplegable && boton && menu) {
+			const hover = window.matchMedia('(hover: hover) and (pointer: fine)')
+			desplegable.addEventListener('mouseenter', () => hover.matches && abrirMenu(true))
+			desplegable.addEventListener('mouseleave', () => {
+				if (!hover.matches) return
+				cierre = window.setTimeout(() => abrirMenu(false), 180)
+			})
+			boton.addEventListener('click', () => abrirMenu(!abierto()))
+			boton.addEventListener('keydown', (event) => {
+				if (event.key === 'ArrowDown') {
+					event.preventDefault()
+					abrirMenu(true)
+					enfocar(0)
+				} else if (event.key === 'ArrowUp') {
+					event.preventDefault()
+					abrirMenu(true)
+					enfocar(links.length - 1)
+				}
+			})
+			menu.addEventListener('keydown', (event) => {
+				const actual = links.indexOf(document.activeElement)
+				if (event.key === 'ArrowDown') {
+					event.preventDefault()
+					enfocar(actual + 1)
+				} else if (event.key === 'ArrowUp') {
+					event.preventDefault()
+					enfocar(actual - 1)
+				} else if (event.key === 'Home') {
+					event.preventDefault()
+					enfocar(0)
+				} else if (event.key === 'End') {
+					event.preventDefault()
+					enfocar(links.length - 1)
+				}
+			})
+			desplegable.addEventListener('focusout', (event) => {
+				if (!desplegable.contains(event.relatedTarget)) abrirMenu(false)
+			})
+			document.addEventListener('click', (event) => {
+				if (abierto() && !desplegable.contains(event.target)) abrirMenu(false)
+			})
+		}
+
+		document.addEventListener('keydown', (event) => {
+			if (event.key !== 'Escape') return
+			if (abierto()) {
+				abrirMenu(false)
+				boton?.focus()
+			}
+			if (toggle?.getAttribute('aria-expanded') === 'true') {
+				setOpen(false)
+				toggle.focus()
+			}
+		})
+
+		// Sobre el hero el encabezado es transparente; pasados los 80 px toma fondo.
+		const marcar = () => header.classList.toggle('is-scrolled', window.scrollY > 80)
+		marcar()
+		window.addEventListener('scroll', marcar, { passive: true })
+	}
+</script>
+
+<style>
+	.site-header {
+		--alto-barra: 5.5rem;
+		--ancho-firma: 6.25rem;
+		position: sticky;
+		top: 0;
+		z-index: 40;
+		color: var(--color-ink);
+	}
+
+	/* Sobre el hero azul: fijo y transparente, con texto blanco cálido. */
+	.site-header--hero {
+		--color-ink: var(--blanco-calido);
+		--color-line: rgb(155 188 198 / 0.3);
+		--fondo-menu: var(--azul-profundo);
+		position: fixed;
+		inset-inline: 0;
+	}
+
+	.site-header--claro {
+		--fondo-menu: var(--blanco-calido);
+	}
+
+	.site-header.site-header--claro::before {
+		background-color: var(--blanco-calido);
+	}
+
+	.site-header__bar {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+		height: var(--alto-barra);
+		transition: height 0.4s var(--ease);
+	}
+
+	/* Fondo y línea inferior en un pseudo-elemento, a todo el ancho. */
+	.site-header::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		border-bottom: 1px solid transparent;
+		background-color: transparent;
+		transition:
+			background-color 0.4s var(--ease),
+			border-color 0.4s var(--ease);
+	}
+
+	.site-header--hero.is-scrolled::before {
+		border-bottom-color: rgb(212 161 78 / 0.35);
+		background-color: rgb(18 57 79 / 0.9);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+	}
+
+	.site-header--claro.is-scrolled::before {
+		border-bottom-color: var(--color-line);
+		background-color: rgb(250 247 243 / 0.94);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+	}
+
+	.site-header.is-scrolled {
+		--alto-barra: 4.5rem;
+		--ancho-firma: 5rem;
+	}
+
+	/* Con el panel abierto, la barra queda sobre el azul del menú. */
+	.site-header.is-open {
+		--color-ink: var(--blanco-calido);
+	}
+
+	.site-header.is-open::before {
+		background-color: transparent;
+		border-bottom-color: transparent;
+		backdrop-filter: none;
+	}
+
+	.marca {
+		position: relative;
+		display: block;
+		flex: none;
+		width: var(--ancho-firma);
+		color: var(--color-ink);
+		transition: width 0.4s var(--ease);
+	}
+
+	.marca__linea {
+		display: none;
+		flex: none;
+		width: 1px;
+		height: 2.75rem;
+		background-color: var(--dorado);
+		opacity: 0.8;
+	}
+
+	.site-nav {
+		display: none;
+	}
+
+	.site-nav__lista,
+	.desplegable__menu,
+	.menu-lista,
+	.menu-sub,
+	.menu-redes {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.site-nav__lista {
+		display: flex;
+		align-items: center;
+		gap: clamp(0.9rem, 1.5vw, 2.15rem);
+	}
+
+	.site-nav__link {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-height: 2.75rem;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--color-ink);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		text-decoration: none;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	/* Página activa y hover: línea dorada fina debajo. */
+	.site-nav__link::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0.2em;
+		bottom: 0.55rem;
+		height: 1px;
+		background-color: var(--dorado);
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform 0.4s var(--ease);
+	}
+
+	.site-nav__link.is-active::after,
+	.site-nav__link:hover::after,
+	.desplegable__boton[aria-expanded='true']::after {
+		transform: scaleX(1);
+	}
+
+	.desplegable {
+		position: relative;
+	}
+
+	.desplegable__chevron {
+		width: 0.6rem;
+		height: 0.4rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.2;
+		transition: transform 0.3s var(--ease);
+	}
+
+	[aria-expanded='true'] > .desplegable__chevron {
+		transform: rotate(180deg);
+	}
+
+	.desplegable__menu {
+		position: absolute;
+		top: 100%;
+		left: -1.25rem;
+		min-width: 14rem;
+		padding: 0.75rem 0;
+		border: 1px solid var(--color-line);
+		border-top: 1px solid var(--dorado);
+		background-color: var(--fondo-menu);
+		box-shadow: 0 10px 28px rgb(18 57 79 / 0.1);
+	}
+
+	.desplegable__menu[hidden] {
+		display: none;
+	}
+
+	.desplegable__link {
+		display: block;
+		padding: 0.7rem 1.25rem;
+		color: var(--color-ink);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		text-decoration: none;
+		transition: color 0.3s var(--ease);
+	}
+
+	.desplegable__menu li:last-child {
+		margin-top: 0.4rem;
+		padding-top: 0.4rem;
+		border-top: 1px solid var(--color-line);
+	}
+
+	.desplegable__link:hover,
+	.desplegable__link:focus-visible {
+		color: var(--dorado);
+	}
+
+	.site-header--claro .desplegable__link:hover,
+	.site-header--claro .desplegable__link:focus-visible {
+		color: var(--dorado-oscuro);
+	}
+
+	.menu-toggle {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		margin-left: auto;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-ink);
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	.menu-toggle::before {
+		content: '';
+		position: absolute;
+		inset: 0 -0.75rem;
+	}
+
+	/* Panel móvil: pantalla completa en azul profundo con textura. */
+	.menu-panel[hidden] {
+		display: none;
+	}
+
+	.menu-panel:not([hidden]) {
+		position: fixed;
+		inset: 0;
+		z-index: 1;
+		display: flex;
+		padding: calc(var(--alto-barra) + 1.5rem) 0 2.5rem;
+		overflow-y: auto;
+	}
+
+	.menu-panel__nav {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 3rem;
+	}
+
+	.menu-lista > li + li {
+		border-top: 1px solid var(--color-line);
+	}
+
+	.menu-link {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+		margin: 0;
+		padding: 0.7rem 0;
+		border: 0;
+		background: none;
+		color: var(--blanco-calido);
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 9vw, 2.75rem);
+		font-weight: 500;
+		line-height: 1.15;
+		text-align: left;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.menu-link .desplegable__chevron {
+		width: 0.9rem;
+		height: 0.55rem;
+		stroke: var(--dorado);
+	}
+
+	.menu-link.is-active {
+		color: var(--dorado);
+	}
+
+	.menu-sub {
+		display: grid;
+		gap: 0.25rem;
+		padding: 0 0 1rem 0.25rem;
+	}
+
+	.menu-sub[hidden] {
+		display: none;
+	}
+
+	.menu-sub__link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		color: var(--azul-bruma);
+		font-family: var(--font-ui);
+		font-size: 0.875rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		text-decoration: none;
+	}
+
+	.menu-redes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 2rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--dorado);
+	}
+
+	.marca:focus-visible,
+	.site-nav__link:focus-visible,
+	.desplegable__link:focus-visible,
+	.menu-link:focus-visible,
+	.menu-sub__link:focus-visible,
+	.menu-toggle:focus-visible {
+		outline: 1px solid currentColor;
+		outline-offset: 4px;
+	}
+
+	@media (min-width: 64rem) {
+		.site-header {
+			--alto-barra: 6.5rem;
+			--ancho-firma: 7.25rem;
+		}
+
+		.site-header.is-scrolled {
+			--alto-barra: 4.75rem;
+			--ancho-firma: 5.25rem;
+		}
+
+		.site-header__bar {
+			gap: clamp(1.5rem, 2.5vw, 2.5rem);
+		}
+
+		.marca__linea {
+			display: block;
+		}
+
+		.site-nav {
+			display: block;
+			margin-left: auto;
+		}
+
+		.site-nav__link {
+			letter-spacing: 0.12em;
+		}
+
+		.menu-toggle,
+		.menu-panel,
+		.menu-panel:not([hidden]) {
+			display: none;
+		}
+	}
+
+	@media (min-width: 90rem) {
+		.site-nav__link {
+			letter-spacing: 0.16em;
+		}
+
+		.site-nav__lista {
+			gap: 2rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.site-header__bar,
+		.site-header::before,
+		.marca,
+		.site-nav__link::after,
+		.desplegable__chevron {
+			transition: none;
+		}
+	}
+
+	:global(body.menu-open) {
+		overflow: hidden;
+	}
+</style>

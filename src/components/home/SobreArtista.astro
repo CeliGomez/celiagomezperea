@@ -1,0 +1,120 @@
+---
+import Imagen from './Imagen.astro'
+import Flecha from '../layout/Flecha.astro'
+import { rutas } from '../../lib/rutas.js'
+
+// Foto auténtica de la artista fundida con el fondo y la bio corta (docs/contenido-sobre-la-artista.md).
+const { retrato = null, bio = '', nombre = '' } = Astro.props
+---
+
+{
+	(bio || retrato) && (
+		<section class="artista ctx-claro" aria-labelledby="artista-titulo">
+			<div class="artista__foto">
+				<Imagen
+					source={retrato}
+					alt={retrato?.alt || nombre}
+					titulo={nombre}
+					width={900}
+					height={1200}
+					marco="portada"
+					proporcion="vertical"
+					sizes="(min-width: 64rem) 38vw, 100vw"
+				/>
+			</div>
+			<div class="artista__texto contenedor fade-in">
+				<div class="artista__columna">
+					<div class="encabezado-seccion">
+						<h2 id="artista-titulo" class="t-seccion">
+							Sobre la artista
+						</h2>
+						<span class="filete filete--largo" aria-hidden="true" />
+					</div>
+					{bio && <p class="t-texto artista__bio">{bio}</p>}
+					<a class="btn btn-contorno artista__boton" href={rutas.sobreMi}>
+						Conocer más
+						<Flecha />
+					</a>
+				</div>
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.artista {
+		position: relative;
+		display: grid;
+		margin-top: var(--bloque);
+		overflow: hidden;
+	}
+
+	.artista__foto {
+		position: relative;
+		aspect-ratio: 3 / 4;
+		max-height: 32rem;
+		-webkit-mask-image: var(--mascara-abajo);
+		mask-image: var(--mascara-abajo);
+		-webkit-mask-size: 100% 100%;
+		mask-size: 100% 100%;
+	}
+
+	.artista__foto:has(:global(.is-vacia)) {
+		-webkit-mask-image: none;
+		mask-image: none;
+	}
+
+	.artista__foto :global(.marco) {
+		position: absolute;
+		inset: 0;
+		background-color: transparent;
+	}
+
+	.artista__texto {
+		padding-block: 2rem 3.25rem;
+	}
+
+	.artista__bio {
+		max-width: 34rem;
+		margin-top: 1.35rem;
+	}
+
+	.artista__boton {
+		margin-top: 1.75rem;
+	}
+
+	/* Escritorio: la foto en el 46 % izquierdo, a sangre, fundida hacia la derecha. */
+	@media (min-width: 64rem) {
+		.artista {
+			grid-template-columns: minmax(18rem, 36%) minmax(0, 1fr);
+			align-items: stretch;
+		}
+
+		.artista__foto {
+			max-height: none;
+			aspect-ratio: 3 / 4;
+			-webkit-mask-image: var(--mascara-derecha);
+			mask-image: var(--mascara-derecha);
+		}
+
+		.artista__texto {
+			display: flex;
+			align-items: center;
+			padding-block: 4rem;
+		}
+
+		.artista__columna {
+			max-width: 36rem;
+			padding-left: clamp(1.5rem, 4vw, 4rem);
+		}
+
+		.artista--sin-foto .artista__texto {
+			grid-template-columns: 1fr;
+		}
+
+		.artista--sin-foto .artista__columna {
+			grid-column: 1;
+			padding-left: 0;
+		}
+	}
+</style>

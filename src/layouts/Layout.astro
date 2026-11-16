@@ -1,0 +1,129 @@
+---
+import '../styles/global.css';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { fetchPie } from '../lib/sanity.js';
+
+const {
+  title = '',
+  description = '',
+  ogImage,
+  nombre,
+  subtitulo,
+  email,
+  ciudad,
+  instagram,
+  vimeo,
+  youtube,
+  ogImageAlt = '',
+  datos = null,
+  // true cuando la página empieza con una banda azul (el Inicio): el encabezado arranca transparente.
+  heroAzul = false,
+} = Astro.props;
+const jsonLd = datos ? JSON.stringify(datos).replace(/</g, '\\u003c') : ''
+const pie = await fetchPie();
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
+const texto = String(description || '').replace(/\s+/g, ' ').trim();
+const meta = texto.length > 160 ? `${texto.slice(0, 157).replace(/\s+\S*$/, '').trim()}…` : texto;
+const imagenOg = ogImage ? new URL(ogImage, Astro.site ?? Astro.url).href : '';
+// Mientras el sitio sea una demo no se indexa. En el lanzamiento: definir INDEXAR=true.
+const indexar = ['true', '1', 'si', 'sí'].includes(
+  String(import.meta.env.INDEXAR ?? process.env.INDEXAR ?? '').trim().toLowerCase(),
+);
+---
+
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#12394f" />
+    <title>{title}</title>
+    <meta name="description" content={meta} />
+    {!indexar && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={meta} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="es_AR" />
+    {imagenOg && <meta property="og:image" content={imagenOg} />}
+    {imagenOg && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      document.documentElement.classList.remove('no-js');
+    </script>
+  </head>
+  <body>
+    <Header instagram={pie.instagram || instagram} vimeo={pie.vimeo || vimeo} heroAzul={heroAzul} />
+    <main>
+      <slot />
+    </main>
+    <Footer
+      nombre={pie.nombre || nombre}
+      email={pie.email || email}
+      instagram={pie.instagram || instagram}
+      vimeo={pie.vimeo || vimeo}
+      youtube={pie.youtube || youtube}
+      creditos={pie.creditos}
+    />
+    <script>
+      // Fundido de la vista borrosa (LQIP) a la imagen nítida cuando termina de cargar.
+      document.querySelectorAll('img[data-nitida]').forEach((img) => {
+        const marcar = () => img.classList.add('is-nitida');
+        const caer = () => img.closest('[data-marco-caja]')?.classList.add('is-rota');
+        if (img.complete) {
+          marcar();
+          if (img.naturalWidth === 0) caer();
+        } else {
+          img.addEventListener('load', marcar, { once: true });
+          img.addEventListener('error', () => {
+            marcar();
+            caer();
+          }, { once: true });
+        }
+      });
+
+      // Fotogramas y portadas que no pasan por el fundido: si la URL falla, aparece el placeholder.
+      document.querySelectorAll('img[data-marco]:not([data-nitida])').forEach((img) => {
+        const caer = () => img.closest('[data-marco-caja]')?.classList.add('is-rota');
+        if (img.complete && img.naturalWidth === 0) caer();
+        else img.addEventListener('error', caer, { once: true });
+      });
+
+      // Hasta que React hidrata el formulario, un envío nativo recargaría la página.
+      document.querySelectorAll('form.formulario').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          if (form.dataset.listo !== '1') event.preventDefault();
+        });
+      });
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const nodes = document.querySelectorAll('.fade-in');
+
+      if (reduceMotion) {
+        nodes.forEach((node) => node.classList.add('is-visible'));
+      } else if (nodes.length) {
+        const observer = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            obs.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.15 },
+        );
+
+        nodes.forEach((node) => observer.observe(node));
+      }
+    </script>
+  </body>
+</html>

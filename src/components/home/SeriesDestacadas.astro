@@ -1,0 +1,192 @@
+---
+import Imagen from './Imagen.astro'
+import Flecha from '../layout/Flecha.astro'
+import { rutas } from '../../lib/rutas.js'
+
+// series: salida de fetchSeriesDestacadas() (hasta 3). Con menos, se muestran las que haya, sin huecos.
+const { series = [] } = Astro.props
+const tarjetas = series.slice(0, 3).map((serie) => ({
+	...serie,
+	detalle: [serie.anio, serie.cantidadObras > 0 && `${serie.cantidadObras} ${serie.cantidadObras === 1 ? 'obra' : 'obras'}`]
+		.filter(Boolean)
+		.join(' · '),
+}))
+---
+
+{
+	tarjetas.length > 0 && (
+		<section class="series contenedor" aria-labelledby="series-titulo">
+			<header class="series__cabecera fade-in">
+				<div class="encabezado-seccion">
+					<h2 id="series-titulo" class="t-seccion">
+						Series destacadas
+					</h2>
+					<span class="filete filete--largo" aria-hidden="true" />
+				</div>
+				<a class="enlace-caps series__todas" href={rutas.series}>
+					Ver todas las series
+					<Flecha />
+				</a>
+			</header>
+
+			<ul class:list={['series__lista', `series__lista--${tarjetas.length}`]}>
+				{tarjetas.map((serie) => (
+					<li class="series__item fade-in">
+						<a class="tarjeta" href={serie.href}>
+							<div class="tarjeta__imagen">
+								<Imagen
+									source={serie.portada}
+									alt={serie.portada?.alt || serie.nombre}
+									width={800}
+									height={500}
+									marco="portada"
+									proporcion="horizontal"
+									sizes="(min-width: 64rem) min(31vw, 540px), (min-width: 48rem) 46vw, 82vw"
+								/>
+							</div>
+							<div class="tarjeta__pie">
+								<h3 class="tarjeta__nombre">{serie.nombre}</h3>
+								{serie.detalle && <p class="tarjeta__detalle">{serie.detalle}</p>}
+							</div>
+						</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.series {
+		padding-top: var(--bloque);
+	}
+
+	.series__cabecera {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 2rem;
+		margin-bottom: 1.5rem;
+	}
+
+	/* Móvil: carrusel táctil con la tarjeta siguiente asomando. */
+	.series__lista {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 82%;
+		gap: 1rem;
+		margin: 0 calc(-1 * var(--gutter));
+		padding: 0 var(--gutter) 0.25rem;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		scrollbar-width: none;
+		list-style: none;
+	}
+
+	.series__lista::-webkit-scrollbar {
+		display: none;
+	}
+
+	.series__lista--1 {
+		grid-auto-columns: 100%;
+	}
+
+	.series__item {
+		min-width: 0;
+		scroll-snap-align: start;
+	}
+
+	.tarjeta {
+		display: grid;
+		gap: 0.85rem;
+		color: var(--tinta);
+		text-decoration: none;
+	}
+
+	.tarjeta__imagen {
+		position: relative;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background-color: var(--marfil);
+	}
+
+	.tarjeta__imagen :global(.marco) {
+		position: absolute;
+		inset: 0;
+	}
+
+	.tarjeta__imagen :global(img) {
+		transition: transform 0.9s var(--ease);
+	}
+
+	.tarjeta__pie {
+		display: grid;
+		gap: 0.3rem;
+		padding-right: 0.5rem;
+	}
+
+	.tarjeta__nombre {
+		font-family: var(--font-display);
+		font-size: clamp(1.45rem, 1vw + 1rem, 1.85rem);
+		font-weight: 500;
+		line-height: 1.1;
+		letter-spacing: 0;
+		text-wrap: balance;
+	}
+
+	.tarjeta__detalle {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--gris);
+	}
+
+	.tarjeta:focus-visible {
+		outline: 1px solid var(--tinta);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.tarjeta:hover .tarjeta__imagen :global(img) {
+			transform: scale(1.03);
+		}
+	}
+
+	/* Tablet: dos columnas. Escritorio: tantas columnas como series (hasta 3). */
+	@media (min-width: 48rem) {
+		.series__lista {
+			grid-auto-flow: row;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.25rem;
+			margin: 0;
+			padding: 0;
+			overflow: visible;
+		}
+
+		.series__lista--1 {
+			grid-template-columns: minmax(0, 20rem);
+		}
+	}
+
+	@media (min-width: 64rem) {
+		.series__cabecera {
+			margin-bottom: 1.75rem;
+		}
+
+		.series__lista--3 {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tarjeta__imagen :global(img) {
+			transition: none;
+		}
+	}
+</style>
