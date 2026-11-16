@@ -157,6 +157,61 @@ export const artista = defineType({
       ],
     }),
     defineField({
+      name: 'seccionesInicio',
+      title: 'Secciones del inicio',
+      type: 'array',
+      group: 'inicio',
+      description:
+        'Las filas con imagen y texto del inicio, en este orden. Sin filas, la sección no se muestra. Una fila sin foto muestra un fondo con su título.',
+      of: [
+        {
+          type: 'object',
+          name: 'seccionInicio',
+          fields: [
+            defineField({name: 'titulo', title: 'Título', type: 'string', validation: (rule) => rule.required()}),
+            defineField({name: 'descripcion', title: 'Descripción', type: 'text', rows: 2, description: 'Una o dos líneas.'}),
+            defineField({name: 'textoBoton', title: 'Texto del botón', type: 'string', description: 'Ejemplo: Explorar.'}),
+            defineField({
+              name: 'enlace',
+              title: 'Enlace',
+              type: 'string',
+              description: 'Ruta del sitio, como /series, o una dirección completa que empiece con https://.',
+              validation: (rule) => rule.required(),
+            }),
+            campoImagen({
+              name: 'imagen',
+              title: 'Foto de la fila',
+              description: 'Se recorta en horizontal: usá el punto de interés para elegir qué parte se ve. Sin texto encima.',
+            }),
+            defineField({
+              name: 'usarMiniaturaVideo',
+              title: 'Usar la miniatura del último video de Vimeo',
+              type: 'boolean',
+              initialValue: false,
+              description: 'Si hay videos cargados, su miniatura reemplaza a la foto de la fila. Si no, se usa la foto.',
+            }),
+            defineField({
+              name: 'tono',
+              title: 'Color del panel',
+              type: 'string',
+              initialValue: 'azul',
+              options: {
+                list: [
+                  {title: 'Azul', value: 'azul'},
+                  {title: 'Marfil', value: 'marfil'},
+                ],
+                layout: 'radio',
+              },
+            }),
+          ],
+          preview: {
+            select: {title: 'titulo', subtitle: 'tono', media: 'imagen'},
+            prepare: ({title, subtitle, media}) => ({title: title || 'Sin título', subtitle: subtitle === 'marfil' ? 'Marfil' : 'Azul', media}),
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'fragmentos',
       title: 'Fragmentos de obra',
       type: 'array',
