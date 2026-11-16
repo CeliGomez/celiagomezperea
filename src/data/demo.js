@@ -475,6 +475,59 @@ export const artista = {
 	cv: null,
 }
 
+// Filas del Inicio (Cuadros, Obras sobre papel, Audiovisual, Estación Nómade): imagen a la izquierda, texto a la derecha.
+// tono: 'azul' o 'marfil'. usarMiniaturaVideo: si hay videos de Vimeo, la miniatura del primero reemplaza a la imagen de la fila.
+// La portada de Cuadros reencuadra con su propio hotspot, sin tocar el de la serie.
+export const seccionesInicio = [
+	{
+		_key: 'cuadros',
+		titulo: 'Cuadros',
+		descripcion: 'Pinturas y obras de gran formato que exploran territorio, memoria y movimiento.',
+		textoBoton: 'Explorar',
+		enlace: '/series',
+		imagen: {
+			...series.find((item) => item.slug === 'en-que-sala-te-esperas').portada,
+			hotspot: { x: 0.52, y: 0.36, width: 1, height: 1 },
+		},
+		tono: 'azul',
+		usarMiniaturaVideo: false,
+	},
+	{
+		_key: 'obras-sobre-papel',
+		titulo: 'Obras sobre papel',
+		descripcion: disciplinas.find((item) => item.slug === 'obras-sobre-papel').descripcion,
+		textoBoton: 'Explorar',
+		enlace: '/obras/obras-sobre-papel',
+		imagen: disciplinas.find((item) => item.slug === 'obras-sobre-papel').portada,
+		tono: 'marfil',
+		usarMiniaturaVideo: false,
+	},
+	{
+		_key: 'audiovisual',
+		titulo: 'Audiovisual',
+		descripcion: 'Producción audiovisual de Celia Gómez Perea. Sus piezas se publican en Vimeo.',
+		textoBoton: 'Explorar',
+		enlace: '/audiovisual',
+		// Foto de respaldo mientras no haya videos cargados.
+		imagen: artista.heroAudiovisual.imagen,
+		tono: 'azul',
+		usarMiniaturaVideo: true,
+	},
+	{
+		_key: 'estacion-nomade',
+		titulo: 'Estación Nómade',
+		// Texto provisorio: confirmar con Celia
+		descripcion: 'Un espacio creativo para talleres, eventos de arte y encuentros en torno a la creación.',
+		textoBoton: 'Ver más',
+		// Cambiar cuando exista la página o el Instagram de Estación Nómade
+		enlace: '/contacto',
+		// Sin foto real de un taller de Celia: la fila muestra un fondo con textura y el nombre.
+		imagen: null,
+		tono: 'marfil',
+		usarMiniaturaVideo: false,
+	},
+]
+
 // Solo medios de contacto confirmados. Email y WhatsApp se agregan desde Sanity cuando estén disponibles.
 export const configuracion = {
 	_id: 'configuracion',

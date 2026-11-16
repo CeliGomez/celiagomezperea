@@ -1540,6 +1540,42 @@ export async function fetchVideoReciente() {
   return video ? prepararProyecto(video) : null
 }
 
+// Filas del Inicio (imagen + texto). Misma forma en demo y en Sanity. Sin filas cargadas, devuelve [] y la sección no se muestra.
+// imagen: la foto de la fila o null. miniatura: fotograma del último video de Vimeo, solo si la fila lo pide y hay video.
+function prepararSeccionInicio(seccion) {
+  return {
+    id: seccion._key || seccion._id || '',
+    titulo: String(seccion.titulo || '').trim(),
+    descripcion: String(seccion.descripcion || '').trim(),
+    textoBoton: String(seccion.textoBoton || '').trim() || 'Explorar',
+    enlace: resolverEnlace(String(seccion.enlace || '').trim()),
+    tono: seccion.tono === 'marfil' ? 'marfil' : 'azul',
+    usarMiniaturaVideo: seccion.usarMiniaturaVideo === true,
+    imagen: imagenDisponible(seccion.imagen) ? seccion.imagen : null,
+    miniatura: null,
+  }
+}
+
+export async function fetchSeccionesInicio() {
+  const lista = enDemo
+    ? demo.seccionesInicio || []
+    : (await client.fetch(
+        `*[_id == "artista"][0].seccionesInicio[]{ _key, titulo, descripcion, textoBoton, enlace, tono, usarMiniaturaVideo, imagen ${imagen} }`,
+      )) || []
+  const secciones = lista.map(prepararSeccionInicio).filter((seccion) => seccion.titulo && seccion.enlace)
+  if (!secciones.some((seccion) => seccion.usarMiniaturaVideo)) return secciones
+
+  const video = await fetchVideoReciente()
+  const portada = video?.miniatura?.src
+    ? video.miniatura
+    : video?.miniaturaUrl
+      ? {src: video.miniaturaUrl, srcset: '', alt: ''}
+      : null
+  if (!portada) return secciones
+  const miniatura = {src: portada.src, srcset: portada.srcset || '', alt: portada.alt || `Fotograma de ${video.titulo}`}
+  return secciones.map((seccion) => (seccion.usarMiniaturaVideo ? {...seccion, miniatura} : seccion))
+}
+
 // Fragmentos de obra (acercamientos a la superficie de un cuadro) por ubicación: { 'inicio-1': {...} }.
 // En Sanity se cargan en "La artista" → "Fragmentos". Solo los que tienen imagen.
 function prepararFragmento(fragmento) {

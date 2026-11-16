@@ -1,0 +1,310 @@
+---
+import Imagen from './Imagen.astro'
+import Flecha from '../layout/Flecha.astro'
+
+/*
+	Filas horizontales apiladas: imagen a la izquierda (53 %) y panel de texto a la derecha (47 %).
+	secciones: salida de fetchSeccionesInicio(). Sin filas, la sección no se muestra.
+	Cada fila entera es un enlace. Sin imagen, la mitad izquierda muestra un fondo con textura y el título.
+	miniatura: fotograma de Vimeo (si la fila lo pide y hay video); tiene prioridad sobre la imagen.
+*/
+const { secciones = [] } = Astro.props
+---
+
+{
+	secciones.length > 0 && (
+		<section class="secciones contenedor" aria-label="Cuadros, obras sobre papel, audiovisual y Estación Nómade">
+			<ul class="secciones__lista">
+				{secciones.map((seccion) => (
+					<li class="secciones__item fade-in">
+						<a
+							class:list={['fila', `fila--${seccion.tono}`]}
+							href={seccion.enlace}
+							aria-labelledby={`fila-${seccion.id}-titulo`}
+							aria-describedby={seccion.descripcion ? `fila-${seccion.id}-descripcion` : undefined}
+						>
+							<div class="fila__imagen">
+								{seccion.miniatura ? (
+									<img
+										src={seccion.miniatura.src}
+										srcset={seccion.miniatura.srcset || undefined}
+										sizes="(min-width: 64rem) 53vw, 100vw"
+										alt={seccion.miniatura.alt}
+										width="1280"
+										height="720"
+										loading="lazy"
+										decoding="async"
+									/>
+								) : seccion.imagen ? (
+									<Imagen
+										source={seccion.imagen}
+										alt={seccion.imagen.alt || seccion.titulo}
+										titulo={seccion.titulo}
+										width={1200}
+										height={700}
+										marco="portada"
+										proporcion="horizontal"
+										sizes="(min-width: 64rem) 53vw, 100vw"
+									/>
+								) : (
+									<span class="fila__vacia" aria-hidden="true">
+										{seccion.titulo}
+									</span>
+								)}
+							</div>
+							<div
+								class:list={[
+									'fila__texto',
+									seccion.tono === 'azul' ? 'ctx-azul ctx-azul--profundo textura textura--sutil' : 'ctx-marfil',
+								]}
+							>
+								<span class="fila__filete" aria-hidden="true" />
+								<h2 id={`fila-${seccion.id}-titulo`} class="fila__titulo">
+									{seccion.titulo}
+								</h2>
+								{seccion.descripcion && (
+									<p id={`fila-${seccion.id}-descripcion`} class="fila__descripcion">
+										{seccion.descripcion}
+									</p>
+								)}
+								<span class="btn fila__boton">
+									{seccion.textoBoton}
+									<Flecha />
+								</span>
+							</div>
+						</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.secciones {
+		padding-top: var(--bloque);
+	}
+
+	.secciones__lista {
+		display: grid;
+		gap: 1.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.fila {
+		display: grid;
+		overflow: hidden;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.fila:focus-visible {
+		outline: 2px solid var(--dorado);
+		outline-offset: 4px;
+	}
+
+	/* Imagen: a todo el ancho en 16:9 (móvil y tablet). */
+	.fila__imagen {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		overflow: hidden;
+		background-color: var(--marfil);
+	}
+
+	.fila__imagen > img,
+	.fila__imagen :global(.marco) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		object-fit: cover;
+	}
+
+	.fila__imagen > img,
+	.fila__imagen :global(img) {
+		transition:
+			opacity 0.7s var(--ease),
+			transform 0.4s var(--ease);
+	}
+
+	/* Sin foto: marfil más oscuro con pigmento y grano procedurales, y el nombre en el centro. */
+	.fila__vacia {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		padding: 1rem;
+		background-color: color-mix(in srgb, var(--marfil) 88%, var(--dorado-oscuro));
+		color: var(--dorado-oscuro);
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 3.4vw, 3rem);
+		font-style: italic;
+		font-weight: 400;
+		line-height: 1.1;
+		text-align: center;
+		isolation: isolate;
+	}
+
+	.fila__vacia::before,
+	.fila__vacia::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+	}
+
+	.fila__vacia::before {
+		background-image: var(--textura-pigmento);
+		background-size: 720px 720px;
+		opacity: 0.22;
+	}
+
+	.fila__vacia::after {
+		background-image: var(--textura-grano);
+		background-size: 220px 220px;
+		mix-blend-mode: multiply;
+		opacity: 0.07;
+	}
+
+	.fila__texto {
+		display: grid;
+		justify-items: start;
+		align-content: center;
+		padding: 1.75rem;
+	}
+
+	.fila__filete {
+		display: block;
+		width: 2rem;
+		height: 2px;
+		margin-bottom: 1.1rem;
+		background-color: var(--dorado);
+	}
+
+	.fila__titulo {
+		font-family: var(--font-display);
+		font-size: clamp(2.5rem, 4.2vw, 4rem);
+		font-weight: 500;
+		line-height: 1.05;
+		letter-spacing: 0;
+		text-wrap: balance;
+	}
+
+	.fila--azul .fila__titulo {
+		color: var(--blanco-calido);
+	}
+
+	.fila--marfil .fila__titulo {
+		color: var(--tinta);
+	}
+
+	.fila__descripcion {
+		max-width: 25rem;
+		margin-top: 0.9rem;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.55;
+	}
+
+	.fila--azul .fila__descripcion {
+		color: color-mix(in srgb, var(--blanco-calido) 85%, transparent);
+	}
+
+	.fila--marfil .fila__descripcion {
+		color: color-mix(in srgb, var(--tinta) 80%, transparent);
+	}
+
+	.fila__boton {
+		margin-top: 1.6rem;
+		border-color: var(--dorado);
+		color: var(--dorado);
+		transition:
+			background-color 0.4s var(--ease),
+			border-color 0.4s var(--ease),
+			color 0.4s var(--ease);
+	}
+
+	.fila--marfil .fila__boton {
+		border-color: var(--tinta);
+		color: var(--tinta);
+	}
+
+	.fila__boton :global(.flecha) {
+		transition: transform 0.4s var(--ease);
+	}
+
+	.fila:is(:hover, :focus-visible) .fila__boton {
+		background-color: var(--dorado);
+		border-color: var(--dorado);
+		color: var(--azul-profundo);
+	}
+
+	.fila--marfil:is(:hover, :focus-visible) .fila__boton {
+		background-color: var(--tinta);
+		border-color: var(--tinta);
+		color: var(--marfil);
+	}
+
+	.fila:is(:hover, :focus-visible) .fila__boton :global(.flecha) {
+		transform: translateX(4px);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.fila:hover .fila__imagen > img,
+		.fila:hover .fila__imagen :global(img) {
+			transform: scale(1.03);
+		}
+	}
+
+	/* Tablet: el panel conserva su margen de 28 px; el título crece un poco. */
+	@media (min-width: 48rem) {
+		.fila__texto {
+			padding: 2rem 1.75rem 2.25rem;
+		}
+	}
+
+	/* Escritorio: imagen 53 % y panel 47 %, del mismo alto. */
+	@media (min-width: 64rem) {
+		.fila {
+			grid-template-columns: minmax(0, 53fr) minmax(0, 47fr);
+			height: 19.25rem;
+		}
+
+		.fila__imagen {
+			aspect-ratio: auto;
+			height: 100%;
+		}
+
+		.fila__texto {
+			padding: 1.5rem 3rem 1.5rem 4rem;
+		}
+	}
+
+	/* Entrada escalonada, solo con movimiento permitido (la transición base vive en .fade-in). */
+	@media (prefers-reduced-motion: no-preference) {
+		.secciones__item:nth-child(2) {
+			transition-delay: 80ms;
+		}
+
+		.secciones__item:nth-child(3) {
+			transition-delay: 160ms;
+		}
+
+		.secciones__item:nth-child(4) {
+			transition-delay: 240ms;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.fila__imagen > img,
+		.fila__imagen :global(img),
+		.fila__boton,
+		.fila__boton :global(.flecha) {
+			transition: none;
+		}
+	}
+</style>
