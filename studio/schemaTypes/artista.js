@@ -81,45 +81,6 @@ export const artista = defineType({
         'Una frase propia de la artista. Se muestra debajo del nombre en el inicio y en Sobre la artista. Ejemplo: Territorio arte.',
     }),
     defineField({
-      name: 'heroInicio',
-      title: 'Hero de inicio',
-      type: 'object',
-      group: 'inicio',
-      description: 'El bloque grande de la primera pantalla. El título va en tres líneas.',
-      fields: [
-        defineField({
-          name: 'linea1',
-          title: 'Línea 1',
-          type: 'string',
-          description: 'Primera línea del título. Ejemplo: PINTURA',
-        }),
-        defineField({
-          name: 'linea2',
-          title: 'Línea 2',
-          type: 'string',
-          description: 'Segunda línea del título. Ejemplo: TERRITORIO',
-        }),
-        defineField({
-          name: 'linea3',
-          title: 'Línea 3',
-          type: 'string',
-          description: 'Tercera línea del título. Ejemplo: MEMORIA',
-        }),
-        defineField({
-          name: 'bajada',
-          title: 'Bajada',
-          type: 'text',
-          rows: 3,
-          description: 'Una frase corta debajo del título.',
-        }),
-        campoImagen({
-          name: 'imagen',
-          title: 'Imagen',
-          description: 'La foto de fondo o principal de la primera pantalla. Campo anterior: el inicio ahora usa las diapositivas.',
-        }),
-      ],
-    }),
-    defineField({
       name: 'fraseInicio',
       title: 'Frase del inicio',
       type: 'string',
