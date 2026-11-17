@@ -25,7 +25,7 @@ function distancia(toques) {
 	return Math.hypot(dx, dy)
 }
 
-export default function Visor({ imagenes = [], titulo = '', slug = '', relacion = null }) {
+export default function Visor({ imagenes = [], titulo = '', anio = null, slug = '', relacion = null }) {
 	const [indice, setIndice] = useState(0)
 	const [visible, setVisible] = useState(true)
 	const [abierto, setAbierto] = useState(false)
@@ -370,6 +370,12 @@ export default function Visor({ imagenes = [], titulo = '', slug = '', relacion 
 								+
 							</button>
 						</div>
+						{titulo && (
+							<p className="lightbox__epigrafe">
+								<span className="titulo-obra">{titulo}</span>
+								{anio ? `, ${anio}` : ''}
+							</p>
+						)}
 						{total > 1 && (
 							<p className="lightbox__cuenta" aria-live="polite">
 								{indice + 1} / {total}

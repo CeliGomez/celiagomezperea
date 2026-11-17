@@ -25,6 +25,13 @@ const projectId = (leerVite('SANITY_PROJECT_ID') || process.env?.SANITY_PROJECT_
 const dataset = (leerVite('SANITY_DATASET') || process.env?.SANITY_DATASET || '').trim()
 const enDemo = !projectId || !dataset
 
+// Contenido fijo: textos, fotos de la artista, inicio, audiovisual, trayectoria y contacto viven en
+// src/data/demo.js y se editan en el código. Sanity guarda solo lo que carga la artista desde el panel:
+// las obras (series de cuadros) con sus cuadros, y las ilustraciones.
+// Con Sanity conectado, cada función que no es de obras usa `local` en lugar de `enDemo`.
+const CONTENIDO_FIJO = true
+const local = enDemo || CONTENIDO_FIJO
+
 if (enDemo) {
   console.warn('Modo demo: usando datos de ejemplo')
 }
@@ -146,7 +153,8 @@ function cadenaDemo(source) {
 }
 
 export function urlFor(source) {
-  if (enDemo) return cadenaDemo(source)
+  // Las fotos del contenido fijo están en public/demo (ref image-demo-...); las de Sanity, en su CDN.
+  if (enDemo || datosDemo(source)) return cadenaDemo(source)
   return builder.image(source).auto('format')
 }
 
@@ -154,8 +162,8 @@ export function urlFor(source) {
 // Así una foto que todavía no se procesó se comporta igual que una imagen sin cargar en Sanity.
 export function imagenDisponible(source) {
   if (!source?.asset) return false
-  if (!enDemo) return true
   const datos = datosDemo(source)
+  if (!enDemo && !datos) return true
   return Boolean(datos && datos.ancho > 0 && archivoDemo(datos.archivo))
 }
 
@@ -182,7 +190,7 @@ export function relacionConfiable(imagen) {
 
 export async function fetchObras(filtro = '', params = {}) {
   if (enDemo) return obrasDemo()
-  const publicadas = `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc)`
+  const publicadas = `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc, _createdAt asc)`
   const query = filtro ? `${publicadas}[${filtro}]` : publicadas
   return client.fetch(query, params)
 }
@@ -269,7 +277,7 @@ async function completarImagenesDemo() {
   )
 }
 
-if (enDemo) await completarImagenesDemo()
+if (local) await completarImagenesDemo()
 
 // Videos de demo: título, portada, duración y descripción salen de Vimeo (oEmbed), nunca a mano.
 function duracionVimeo(segundos) {
@@ -339,7 +347,7 @@ async function conMiniatura(proyectos) {
 }
 
 export async function fetchInicio() {
-  if (enDemo) {
+  if (local) {
     const destacadas = obrasDemo()
       .filter((obra) => obra.destacadaEnInicio)
       .slice(0, 4)
@@ -397,7 +405,7 @@ export async function fetchInicio() {
       }
     }`),
     client.fetch(
-      `*[_type == "obra" && destacadaEnInicio == true && !(_id in path("drafts.**")) && coalesce(publicada, true) == true] | order(coalesce(ordenGaleria, 999999) asc) [0...4] {
+      `*[_type == "obra" && destacadaEnInicio == true && !(_id in path("drafts.**")) && coalesce(publicada, true) == true] | order(coalesce(ordenGaleria, 999999) asc, _createdAt asc) [0...4] {
         titulo,
         "slug": slug.current,
         anio,
@@ -533,12 +541,12 @@ export async function fetchGaleria() {
   }
 
   const [artista, configuracion, obras] = await Promise.all([
-    client.fetch(`*[_id == "artista"][0]{
+    local ? demo.artista : client.fetch(`*[_id == "artista"][0]{
       nombre,
       subtitulo,
       bajadaGaleria
     }`),
-    client.fetch(`*[_id == "configuracion"][0]{
+    local ? demo.configuracion : client.fetch(`*[_id == "configuracion"][0]{
       email,
       whatsapp,
       ciudad,
@@ -548,7 +556,7 @@ export async function fetchGaleria() {
       bajadaGaleria
     }`),
     client.fetch(
-      `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc) {
+      `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc, _createdAt asc) {
         titulo,
         "slug": slug.current,
         anio,
@@ -763,8 +771,8 @@ export async function fetchPaginasObra() {
   if (enDemo) return paginasDe(vistasDe(obrasDemo()), demo.artista, demo.configuracion)
 
   const [artista, configuracion, obras] = await Promise.all([
-    client.fetch(`*[_id == "artista"][0]{ nombre, subtitulo }`),
-    client.fetch(`*[_id == "configuracion"][0]{
+    local ? demo.artista : client.fetch(`*[_id == "artista"][0]{ nombre, subtitulo }`),
+    local ? demo.configuracion : client.fetch(`*[_id == "configuracion"][0]{
       email,
       whatsapp,
       ciudad,
@@ -774,7 +782,7 @@ export async function fetchPaginasObra() {
       envioColeccion
     }`),
     client.fetch(
-      `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc) {
+      `*[_type == "obra" && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc, _createdAt asc) {
         titulo,
         "slug": slug.current,
         anio,
@@ -862,7 +870,7 @@ async function prepararProyecto(proyecto) {
 }
 
 export async function fetchAudiovisual() {
-  if (enDemo) {
+  if (local) {
     const proyectos = await Promise.all((await proyectosDemo()).map((proyecto) => prepararProyecto(proyecto)))
     return {
       artista: {
@@ -967,7 +975,7 @@ function datosContacto(configuracion) {
 }
 
 export async function fetchPie() {
-	if (enDemo) {
+	if (local) {
 		return {
 			nombre: demo.artista?.nombre || '',
 			...datosContacto(demo.configuracion),
@@ -1026,7 +1034,7 @@ function armarContacto(artista, configuracion) {
 }
 
 export async function fetchSobreMi() {
-	if (enDemo) return armarSobreMi(demo.artista, demo.configuracion)
+	if (local) return armarSobreMi(demo.artista, demo.configuracion)
 
 	const [artista, configuracion] = await Promise.all([
 		client.fetch(`*[_id == "artista"][0]{
@@ -1059,7 +1067,7 @@ export async function fetchSobreMi() {
 }
 
 export async function fetchContacto() {
-	if (enDemo) return armarContacto(demo.artista, demo.configuracion)
+	if (local) return armarContacto(demo.artista, demo.configuracion)
 
 	const [artista, configuracion] = await Promise.all([
 		client.fetch(`*[_id == "artista"][0]{
@@ -1095,6 +1103,8 @@ const proyeccionSerie = `{
   principalInicio,
   orden,
   portada ${imagen},
+  "portadaObra": *[_type == "obra" && ${VISIBLE} && serie._ref == ^._id && defined(imagenPrincipal.asset)]
+    | order(coalesce(ordenEnSerie, 999999) asc)[0].imagenPrincipal ${imagen},
   "disciplina": disciplina->{ nombre, "slug": slug.current },
   "cantidadObras": count(*[_type == "obra" && ${VISIBLE} && serie._ref == ^._id])
 }`
@@ -1139,6 +1149,16 @@ function prepararDisciplina(disciplina) {
   }
 }
 
+// La portada cargada; si no hay, la foto del primer cuadro de la serie (así nunca queda vacía).
+function portadaDeSerie(serie, obras) {
+  if (imagenDisponible(serie.portada)) return serie.portada
+  if (imagenDisponible(serie.portadaObra)) return serie.portadaObra
+  const primera = (obras || [])
+    .filter((obra) => obra.serie?.slug === serie.slug && imagenDisponible(obra.imagenPrincipal))
+    .sort((a, b) => (a.ordenEnSerie ?? 999999) - (b.ordenEnSerie ?? 999999))[0]
+  return primera ? primera.imagenPrincipal : null
+}
+
 function prepararSerie(serie, obras) {
   const cantidadObras = Number.isFinite(serie.cantidadObras)
     ? serie.cantidadObras
@@ -1150,7 +1170,7 @@ function prepararSerie(serie, obras) {
     slug: serie.slug || '',
     href: rutaSerie(serie.slug),
     disciplina: normalizarDisciplina(serie.disciplina),
-    portada: imagenDisponible(serie.portada) ? serie.portada : null,
+    portada: portadaDeSerie(serie, obras),
     descripcion,
     anio: String(serie.anio || '').trim(),
     tecnicaGeneral: String(serie.tecnicaGeneral || '').trim(),
@@ -1196,7 +1216,8 @@ export async function fetchDisciplinas() {
       portada ${imagen}
     }`,
   )
-  return (disciplinas || []).map(prepararDisciplina)
+  if (!disciplinas?.length) return [...(demo.disciplinas || [])].sort(porOrden).map(prepararDisciplina)
+  return disciplinas.map(prepararDisciplina)
 }
 
 export async function fetchSeries({disciplina = ''} = {}) {
@@ -1268,7 +1289,7 @@ export async function fetchObrasPorDisciplina(slug) {
       .map(obraDeLista)
   }
   const obras = await client.fetch(
-    `*[_type == "obra" && disciplina->slug.current == $slug && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc) ${proyeccionObraLista}`,
+    `*[_type == "obra" && disciplina->slug.current == $slug && ${VISIBLE}] | order(coalesce(ordenGaleria, 999999) asc, _createdAt asc) ${proyeccionObraLista}`,
     {slug},
   )
   return (obras || []).map(obraDeLista)
@@ -1299,7 +1320,7 @@ export async function fetchSeriePrincipal() {
     return serie ? prepararSerie(serie, obrasDemo()) : null
   }
   const serie = await client.fetch(
-    `*[_type == "serie" && principalInicio == true && ${VISIBLE}] | order(coalesce(orden, 999999) asc)[0] ${proyeccionSerie}`,
+    `*[_type == "serie" && ${VISIBLE}] | order(coalesce(principalInicio, false) desc, coalesce(orden, 999999) asc)[0] ${proyeccionSerie}`,
   )
   return serie ? prepararSerie(serie) : null
 }
@@ -1314,8 +1335,8 @@ export async function fetchSeriesDestacadas({excluir = ''} = {}) {
       .map((serie) => prepararSerie(serie, obras))
   }
   const series = await client.fetch(
-    `*[_type == "serie" && destacada == true && slug.current != $excluir && ${VISIBLE}]
-      | order(coalesce(orden, 999999) asc)[0...3] ${proyeccionSerie}`,
+    `*[_type == "serie" && slug.current != $excluir && ${VISIBLE}]
+      | order(coalesce(destacada, false) desc, coalesce(orden, 999999) asc)[0...3] ${proyeccionSerie}`,
     {excluir},
   )
   return (series || []).map((serie) => prepararSerie(serie))
@@ -1373,7 +1394,7 @@ function prepararProyectoArtistico(proyecto) {
 }
 
 export async function fetchProyectos() {
-  if (enDemo) {
+  if (local) {
     return [...(demo.proyectosArtisticos || [])]
       .filter((proyecto) => proyecto.publicada !== false)
       .sort(porOrden)
@@ -1415,7 +1436,7 @@ export async function fetchTrayectoria() {
     formacionMovimiento: [],
     charlasDocencia: [],
   }
-  if (enDemo) {
+  if (local) {
     return {
       obrasExposiciones: hitosDe(demo.artista?.obrasExposiciones),
       premiosBecasResidencias: hitosDe(demo.artista?.premiosBecasResidencias),
@@ -1445,7 +1466,7 @@ export async function fetchTrayectoria() {
 function videoDisponible(url) {
   const ruta = String(url || '').trim()
   if (!ruta) return ''
-  if (!enDemo) return ruta
+  if (!local) return ruta
   return existsSync(join(process.cwd(), 'public', decodeURI(ruta).replace(/^\/+/, ''))) ? ruta : ''
 }
 
@@ -1462,7 +1483,7 @@ function prepararDiapositiva(diapositiva) {
 }
 
 export async function fetchDiapositivasHero() {
-  if (enDemo) {
+  if (local) {
     return [...(demo.diapositivasHero || [])]
       .filter((diapositiva) => diapositiva.activa !== false && imagenDisponible(diapositiva.imagen))
       .sort(porOrden)
@@ -1498,13 +1519,13 @@ function prepararHeroInicio(hero) {
 }
 
 export async function fetchHeroInicio() {
-  if (enDemo) return prepararHeroInicio(demo.artista?.heroInicio)
+  if (local) return prepararHeroInicio(demo.artista?.heroInicio)
   const artista = await client.fetch(`*[_id == "artista"][0]{ heroInicio }`)
   return prepararHeroInicio(artista?.heroInicio)
 }
 
 export async function fetchFraseInicio() {
-  if (enDemo) return String(demo.artista?.fraseInicio || '').trim()
+  if (local) return String(demo.artista?.fraseInicio || '').trim()
   const artista = await client.fetch(`*[_id == "artista"][0]{ fraseInicio }`)
   return String(artista?.fraseInicio || '').trim()
 }
@@ -1522,7 +1543,7 @@ export async function fetchConfiguracionInicio() {
 
 // El video más reciente, listo para el modal de Vimeo (o null si no hay ninguno).
 export async function fetchVideoReciente() {
-  if (enDemo) {
+  if (local) {
     const [video] = await proyectosDemo()
     return video ? prepararProyecto(video) : null
   }
@@ -1557,7 +1578,7 @@ function prepararSeccionInicio(seccion) {
 }
 
 export async function fetchSeccionesInicio() {
-  const lista = enDemo
+  const lista = local
     ? demo.seccionesInicio || []
     : (await client.fetch(
         `*[_id == "artista"][0].seccionesInicio[]{ _key, titulo, descripcion, textoBoton, enlace, tono, usarMiniaturaVideo, imagen ${imagen} }`,
@@ -1587,8 +1608,37 @@ function prepararFragmento(fragmento) {
   }
 }
 
+// El epígrafe de un fragmento ("Obra o serie") lleva a esa obra o serie si el nombre coincide con una publicada.
+function normalizarNombre(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+async function destinosPorNombre() {
+  const [obras, series] = enDemo
+    ? [obrasDemo().map((obra) => ({titulo: obra.titulo, slug: obra.slug})), (demo.series || []).filter((serie) => serie.publicada !== false)]
+    : await Promise.all([
+        client.fetch(`*[_type == "obra" && ${VISIBLE}]{ titulo, "slug": slug.current }`),
+        client.fetch(`*[_type == "serie" && !(_id in path("drafts.**")) && coalesce(publicada, true) == true]{ nombre, "slug": slug.current }`),
+      ])
+  const mapa = new Map()
+  for (const serie of series || []) {
+    const slug = typeof serie.slug === 'string' ? serie.slug : serie.slug?.current
+    if (serie.nombre && slug) mapa.set(normalizarNombre(serie.nombre), rutaSerie(slug))
+  }
+  // Si una obra y una serie se llaman igual, gana la obra: el fragmento es de un cuadro.
+  for (const obra of obras || []) {
+    if (obra.titulo && obra.slug) mapa.set(normalizarNombre(obra.titulo), `/obras/${obra.slug}`)
+  }
+  return mapa
+}
+
 export async function fetchFragmentos() {
-  const lista = enDemo
+  const lista = local
     ? demo.fragmentos || []
     : (await client.fetch(`*[_id == "artista"][0].fragmentos[]{ _key, ubicacion, obra, imagen ${imagen} }`)) || []
   const porUbicacion = {}
@@ -1596,6 +1646,11 @@ export async function fetchFragmentos() {
     if (!imagenDisponible(fragmento?.imagen)) continue
     const preparado = prepararFragmento(fragmento)
     if (preparado.ubicacion && !porUbicacion[preparado.ubicacion]) porUbicacion[preparado.ubicacion] = preparado
+  }
+  const conNombre = Object.values(porUbicacion).filter((fragmento) => fragmento.obra)
+  if (conNombre.length) {
+    const destinos = await destinosPorNombre()
+    for (const fragmento of conNombre) fragmento.href = destinos.get(normalizarNombre(fragmento.obra)) || ''
   }
   return porUbicacion
 }

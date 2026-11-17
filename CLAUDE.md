@@ -1,6 +1,6 @@
 # webgalery — web de la artista Celia Gómez Perea
 
-Web de Celia Gómez Perea, artista visual de Trelew, Chubut (pintura, dibujo, instalación, performance, videoarte), con más de 20 años de trayectoria. Proyecto de MediaDesign. Concepto visual: **galería editorial oceánica**. Dominio final: celiagomezperea.com. Demo: webgalery-three.vercel.app.
+Web de Celia Gómez Perea, artista visual de Trelew, Chubut (pintura, dibujo, instalación, performance, videoarte), con más de 20 años de trayectoria. Proyecto de MediaDesign. Concepto visual: **galería editorial oceánica**. Dominio final: celiagomezperea.com. Repo: CeliGomez/celiagomezperea (cuentas de GitHub, Vercel, Sanity y Web3Forms de la artista).
 
 Respondé siempre en español rioplatense.
 
@@ -13,7 +13,10 @@ Respondé siempre en español rioplatense.
 ## Cómo trabajar
 - El plan está en docs/plan-rediseno.md, dividido en etapas. Hacé solo la etapa que te pida.
 - Antes de editar, revisá los componentes existentes y reutilizá lo que sirva. No rehacer lo que funciona: Vimeo en modal, lightbox, formulario con Web3Forms, noindex, carga progresiva de imágenes, View Transitions.
-- Las rutas existentes siguen funcionando: /, /obras, /obras/[slug], /audiovisual, /sobre-mi, /contacto.
+- Las rutas existentes siguen funcionando: /, /obras, /obras/[slug], /series, /series/[slug], /audiovisual, /sobre-mi, /contacto.
+- Sanity guarda solo obras (tipo serie), cuadros e ilustraciones (tipo obra) y las dos disciplinas. Todo lo demás (inicio, la artista, audiovisual, contacto, fragmentos) es contenido fijo en src/data/demo.js: CONTENIDO_FIJO en src/lib/sanity.js.
+- Panel simplificado (studio/structure.js + studio/plantillas.js): 1 · Obras, 2 · Cuadros, Ilustraciones. Las plantillas completan serie, disciplina y orden.
+- Nombres en pantalla: el menú manda. /series se titula "Cuadros" y la disciplina obras-sobre-papel se muestra como "Ilustraciones".
 - Al terminar una etapa: build, capturas a 1440 y 390 px de las páginas tocadas, lista de archivos modificados y por qué. Frenar hasta que valide.
 - No hacer commits ni push.
 

@@ -366,6 +366,13 @@ const hayFondo = preparadas.length > 0
 		cursor: pointer;
 	}
 
+	/* En pantallas táctiles, área de toque de 44 px de alto (la línea sigue siendo fina). */
+	@media (pointer: coarse) {
+		.hero__indicador {
+			height: 2.75rem;
+		}
+	}
+
 	/* Línea fina; la activa se rellena en dorado durante el tiempo que dura. */
 	.hero__indicador::before,
 	.hero__indicador-barra {

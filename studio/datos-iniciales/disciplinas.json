@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "disciplina-pinturas",
+    "_type": "disciplina",
+    "nombre": "Pinturas",
+    "slug": {"_type": "slug", "current": "pinturas"},
+    "orden": 10,
+    "mostrarEnMenu": true
+  },
+  {
+    "_id": "disciplina-ilustraciones",
+    "_type": "disciplina",
+    "nombre": "Ilustraciones",
+    "slug": {"_type": "slug", "current": "obras-sobre-papel"},
+    "orden": 20,
+    "mostrarEnMenu": true
+  }
+]

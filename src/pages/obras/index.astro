@@ -6,7 +6,10 @@ import { fetchGaleria } from '../../lib/sanity.js'
 
 const BAJADA = 'Dibujo, obra bidimensional y experimentación gráfica.'
 
-const { artista, configuracion, bajada, obras } = await fetchGaleria()
+const galeria = await fetchGaleria()
+const { artista, configuracion, bajada } = galeria
+// En la galería pública solo entran las obras con foto: nada de cajas "Imagen pendiente".
+const obras = galeria.obras.filter((obra) => obra.imagen)
 const bajadaVisible = bajada || BAJADA
 const titulo = artista?.nombre ? `Obras — ${artista.nombre}` : 'Obras'
 ---

@@ -14,7 +14,7 @@ export function campoImagen({name, title, description, obligatoria = false, grou
         title: 'Texto alternativo',
         type: 'string',
         description:
-          'Una frase que describe la foto, para quien no puede verla. Ejemplo: “Horizonte ocre sobre un campo gris”.',
+          'Opcional. Una frase que describe la foto, para quien no puede verla. Si lo dejás vacío, se usa el título.',
       }),
     ],
     validation: (rule) =>
@@ -23,9 +23,7 @@ export function campoImagen({name, title, description, obligatoria = false, grou
         if (!tieneArchivo) {
           return obligatoria ? 'Subí una imagen para poder publicar.' : true
         }
-        if (!value?.alt?.trim()) {
-          return 'Escribí un texto alternativo: una frase corta que describa la imagen.'
-        }
+        // El texto alternativo es opcional: si queda vacío, el sitio usa el título del cuadro.
         return true
       }),
   })
@@ -40,13 +38,12 @@ export function imagenEnLista() {
         name: 'alt',
         title: 'Texto alternativo',
         type: 'string',
-        description: 'Una frase que describe esta foto.',
+        description: 'Opcional. Una frase que describe esta foto. Si lo dejás vacío, se usa el título.',
       }),
     ],
     validation: (rule) =>
       rule.custom((value) => {
         if (!value?.asset) return true
-        if (!value?.alt?.trim()) return 'Escribí un texto alternativo para esta foto.'
         return true
       }),
   }

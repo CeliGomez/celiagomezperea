@@ -21,7 +21,7 @@ const modo = series.length <= 1 ? 'una' : series.length === 2 ? 'dos' : 'varias'
 								marco="portada"
 								proporcion="vertical"
 								priority={indice === 0}
-								sizes="(min-width: 64rem) 36vw, (min-width: 48rem) 46vw, 100vw"
+								sizes="(min-width: 64rem) 30vw, (min-width: 48rem) 46vw, 100vw"
 							/>
 						</div>
 						<div class="pieza__texto">
@@ -58,12 +58,14 @@ const modo = series.length <= 1 ? 'una' : series.length === 2 ? 'dos' : 'varias'
 		text-decoration: none;
 	}
 
+	/* Todas las portadas con el mismo ancho y formato (4:5): los títulos quedan alineados. */
 	.pieza__portada {
-		width: min(100%, 18rem);
+		width: 100%;
 	}
 
 	.pieza__portada :global(.marco) {
 		width: 100%;
+		max-width: none !important;
 	}
 
 	.pieza__nombre {
@@ -98,31 +100,23 @@ const modo = series.length <= 1 ? 'una' : series.length === 2 ? 'dos' : 'varias'
 	@media (min-width: 48rem) {
 		.catalogo--dos,
 		.catalogo--varias {
-			grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 			align-items: start;
 		}
 
 		.catalogo--una {
 			grid-template-columns: minmax(0, 26rem);
 		}
-
-		.pieza__portada {
-			width: min(100%, 22rem);
-		}
-
-		.catalogo--dos .catalogo__item:first-child .pieza__portada,
-		.catalogo--varias .catalogo__item:first-child .pieza__portada {
-			width: min(100%, 32rem);
-		}
 	}
 
 	@media (min-width: 64rem) {
-		.catalogo--varias {
-			grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.75fr) minmax(0, 0.75fr);
+		.catalogo--dos {
+			grid-template-columns: repeat(2, minmax(0, 26rem));
+			column-gap: clamp(2rem, 5vw, 5rem);
 		}
 
-		.catalogo--varias .catalogo__item:first-child {
-			grid-row: span 2;
+		.catalogo--varias {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
 

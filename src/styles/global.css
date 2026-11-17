@@ -95,6 +95,10 @@
 
 /* Estilos de elementos en la capa base: así las utilidades de Tailwind (h-full, object-cover...) pueden sobrescribirlos. */
 @layer base {
+  body > main {
+    flex: 1 0 auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -109,6 +113,10 @@
   body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
+    /* El pie queda abajo aunque la página sea corta (Contacto, 404). */
+    display: flex;
+    flex-direction: column;
     overflow-x: clip;
     background-color: var(--color-bg);
     color: var(--color-ink);
@@ -1308,7 +1316,7 @@
 
 .mas-obras__lista {
   row-gap: 2.5rem;
-  align-items: end;
+  align-items: start;
   margin: 2.5rem 0 0;
   padding: 0;
   list-style: none;
@@ -1445,6 +1453,22 @@
 
 .lightbox__zoom .lightbox__btn {
   position: static;
+}
+
+.lightbox__epigrafe {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--blanco-calido);
+  font-size: 1rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lightbox__epigrafe .titulo-obra {
+  font-size: 1.15rem;
 }
 
 .lightbox__cuenta {
@@ -1986,6 +2010,10 @@
   padding-bottom: 0.5rem;
 }
 
+.formulario {
+  scroll-margin-top: 7rem;
+}
+
 .campo {
   display: flex;
   flex-direction: column;
@@ -2163,8 +2191,8 @@
 
   .formulario--fila .formulario__enviar {
     grid-column: 3;
-    grid-row: 1 / 3;
-    align-self: center;
+    grid-row: 2;
+    align-self: end;
     min-width: 9.5rem;
     margin-top: 0;
   }

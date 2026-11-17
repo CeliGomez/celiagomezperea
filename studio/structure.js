@@ -1,103 +1,60 @@
 import {BookIcon} from '@sanity/icons/Book'
-import {CogIcon} from '@sanity/icons/Cog'
-import {HomeIcon} from '@sanity/icons/Home'
 import {ImagesIcon} from '@sanity/icons/Images'
-import {PinIcon} from '@sanity/icons/Pin'
-import {PlayIcon} from '@sanity/icons/Play'
-import {TagIcon} from '@sanity/icons/Tag'
-import {UserIcon} from '@sanity/icons/User'
+import {ImageIcon} from '@sanity/icons/Image'
+
+// Panel simplificado: la artista solo carga dos cosas.
+// - Cuadros: primero la "obra" (por ejemplo, Una vez vi blanco) y después sus cuadros adentro.
+// - Ilustraciones: piezas sueltas sobre papel.
+// El resto del sitio (inicio, la artista, audiovisual, contacto) se edita en el código: src/data/demo.js.
 
 const orden = [{field: 'orden', direction: 'asc'}]
-const ordenGaleria = [{field: 'ordenGaleria', direction: 'asc'}]
 
 export const structure = (S) =>
   S.list()
     .title('Contenido')
     .items([
       S.listItem()
-        .title('Inicio')
-        .icon(HomeIcon)
-        .child(
-          S.list()
-            .title('Inicio')
-            .items([
-              S.documentTypeListItem('diapositivaHero')
-                .title('Diapositivas')
-                .child(S.documentTypeList('diapositivaHero').title('Diapositivas').defaultOrdering(orden)),
-              S.listItem()
-                .title('Frase del inicio')
-                .id('frase-inicio')
-                .child(S.document().schemaType('artista').documentId('artista').title('Frase del inicio')),
-            ]),
-        ),
-      S.documentTypeListItem('serie')
-        .title('Series')
+        .title('1 · Obras')
+        .id('obras')
         .icon(BookIcon)
-        .child(S.documentTypeList('serie').title('Series').defaultOrdering(orden)),
+        .child(
+          S.documentTypeList('serie')
+            .title('Obras')
+            .defaultOrdering(orden)
+            .initialValueTemplates([S.initialValueTemplateItem('obra-de-cuadros')]),
+        ),
       S.listItem()
-        .title('Obras')
+        .title('2 · Cuadros')
+        .id('cuadros')
         .icon(ImagesIcon)
         .child(
-          S.list()
-            .title('Obras')
-            .items([
-              S.listItem()
-                .title('Todas')
-                .child(S.documentTypeList('obra').title('Todas las obras').defaultOrdering(ordenGaleria)),
-              S.listItem()
-                .title('Por disciplina')
-                .child(
-                  S.documentTypeList('disciplina')
-                    .title('Elegí una disciplina')
-                    .child((id) =>
-                      S.documentList()
-                        .title('Obras')
-                        .filter('_type == "obra" && disciplina._ref == $id')
-                        .params({id})
-                        .defaultOrdering(ordenGaleria),
-                    ),
-                ),
-              S.listItem()
-                .title('Por serie')
-                .child(
-                  S.documentTypeList('serie')
-                    .title('Elegí una serie')
-                    .child((id) =>
-                      S.documentList()
-                        .title('Obras')
-                        .filter('_type == "obra" && serie._ref == $id')
-                        .params({id})
-                        .defaultOrdering([{field: 'ordenEnSerie', direction: 'asc'}]),
-                    ),
-                ),
-            ]),
+          S.documentTypeList('serie')
+            .title('¿De qué obra?')
+            .defaultOrdering(orden)
+            // Desde acá no se crean obras: solo se elige una para ver y cargar sus cuadros.
+            .initialValueTemplates([])
+            .menuItems([])
+            .child((serieId) =>
+              S.documentList()
+                .title('Cuadros')
+                .schemaType('obra')
+                .filter('_type == "obra" && serie._ref == $serieId')
+                .params({serieId})
+                .defaultOrdering([{field: 'ordenEnSerie', direction: 'asc'}])
+                .initialValueTemplates([S.initialValueTemplateItem('cuadro-de-obra', {serieId})]),
+            ),
         ),
-      S.documentTypeListItem('disciplina')
-        .title('Disciplinas')
-        .icon(TagIcon)
-        .child(S.documentTypeList('disciplina').title('Disciplinas').defaultOrdering(orden)),
+      S.divider(),
       S.listItem()
-        .title('Proyectos artísticos')
-        .icon(PinIcon)
+        .title('Ilustraciones')
+        .id('ilustraciones')
+        .icon(ImageIcon)
         .child(
-          S.list()
-            .title('Proyectos artísticos')
-            .items([
-              S.documentTypeListItem('exposicion').title('Exposiciones'),
-              S.documentTypeListItem('performance').title('Performances'),
-              S.documentTypeListItem('instalacion').title('Instalaciones'),
-              S.documentTypeListItem('accion').title('Acciones artísticas'),
-            ]),
+          S.documentList()
+            .title('Ilustraciones')
+            .schemaType('obra')
+            .filter('_type == "obra" && disciplina->slug.current == "obras-sobre-papel"')
+            .defaultOrdering([{field: '_createdAt', direction: 'asc'}])
+            .initialValueTemplates([S.initialValueTemplateItem('ilustracion')]),
         ),
-      S.documentTypeListItem('proyectoAudiovisual').title('Audiovisual').icon(PlayIcon),
-      S.listItem()
-        .title('Sobre la artista')
-        .icon(UserIcon)
-        .id('artista')
-        .child(S.document().schemaType('artista').documentId('artista').title('Sobre la artista')),
-      S.listItem()
-        .title('Configuración')
-        .icon(CogIcon)
-        .id('configuracion')
-        .child(S.document().schemaType('configuracion').documentId('configuracion').title('Configuración')),
     ])

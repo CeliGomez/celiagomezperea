@@ -19,12 +19,16 @@ export default function Formulario({ clave = '', whatsapp = '', email: emailCont
 	const [trampa, setTrampa] = useState('')
 	const [errores, setErrores] = useState({})
 	const [estado, setEstado] = useState('listo')
+	// Obra por la que se consulta (llega desde la ficha como ?obra=Título).
+	const [obra, setObra] = useState('')
 	const whatsappHref = linkWhatsapp(whatsapp)
 
 	useEffect(() => {
-		const obra = new URLSearchParams(window.location.search).get('obra')
-		const limpio = (obra || '').replace(/\s+/g, ' ').trim()
-		if (limpio) setMensaje(`Consulta por la obra: ${limpio}`)
+		const consultada = new URLSearchParams(window.location.search).get('obra')
+		const limpio = (consultada || '').replace(/\s+/g, ' ').trim()
+		if (!limpio) return
+		setObra(limpio)
+		setMensaje(`Hola, me interesa la obra "${limpio}". `)
 	}, [])
 
 	useEffect(() => {
@@ -70,7 +74,9 @@ export default function Formulario({ clave = '', whatsapp = '', email: emailCont
 				},
 				body: JSON.stringify({
 					access_key: clave,
-					subject: 'Consulta desde el sitio',
+					subject: obra ? `Consulta por la obra "${obra}" — celiagomezperea.com` : 'Consulta desde celiagomezperea.com',
+					from_name: 'celiagomezperea.com',
+					...(obra ? { obra } : {}),
 					name: nombre.trim(),
 					email: email.trim(),
 					message: mensaje.trim(),

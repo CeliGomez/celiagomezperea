@@ -59,6 +59,14 @@ const { retrato = null, bio = '', nombre = '' } = Astro.props
 		mask-size: 100% 100%;
 	}
 
+	/* En celulares la foto va a todo el ancho (con 3:4 y alto máximo quedaba más angosta que la pantalla). */
+	@media (max-width: 47.99rem) {
+		.artista__foto {
+			aspect-ratio: 4 / 5;
+			max-height: none;
+		}
+	}
+
 	.artista__foto:has(:global(.is-vacia)) {
 		-webkit-mask-image: none;
 		mask-image: none;

@@ -12,8 +12,11 @@ En Vercel, y en un `.env` local:
 | `SANITY_DATASET` | Dataset publicado, por ejemplo `production` |
 | `PUBLIC_WEB3FORMS_KEY` | Clave pública del formulario de contacto |
 | `SITE` | URL pública con protocolo, por ejemplo `https://dominio.com` |
+| `INDEXAR` | `true` solo en producción. Sin esta variable el sitio sale con `noindex` y Google no lo muestra |
 
 `SITE` arma el sitemap y las URLs canónicas. Si no está definida en Vercel, se usa el dominio de producción del proyecto.
+
+Hay un `.env.example` en la raíz y otro en `studio/` para copiar como `.env`.
 
 ## Comandos
 
@@ -22,6 +25,41 @@ npm install
 npm run dev
 npm run build
 ```
+
+## Studio (panel de carga)
+
+```sh
+cd studio
+cp .env.example .env   # completar SANITY_STUDIO_PROJECT_ID
+npm install
+npm run dev            # en local: http://localhost:3333
+npm run deploy         # publica el panel en https://<nombre>.sanity.studio
+```
+
+Después del deploy, Celia carga desde esa URL, sin tocar el código. El panel tiene solo tres entradas:
+
+- **1 · Obras**: cada obra que reúne varios cuadros (por ejemplo, *Una vez vi blanco*).
+- **2 · Cuadros**: se elige la obra y se cargan sus cuadros. La obra, la disciplina y el número de orden se completan solos.
+- **Ilustraciones**: piezas sueltas sobre papel.
+
+El resto del sitio (inicio, la artista, audiovisual, contacto) es contenido fijo en `src/data/demo.js`.
+
+La primera vez, con el proyecto de Sanity vacío, hay que crear las dos disciplinas (Pinturas e Ilustraciones):
+
+```sh
+cd studio
+npx sanity documents create datos-iniciales/disciplinas.json --missing
+```
+
+## Antes del lanzamiento
+
+- [ ] En Vercel: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `PUBLIC_WEB3FORMS_KEY`, `SITE=https://celiagomezperea.com` e `INDEXAR=true` (solo Production).
+- [ ] Deploy Hook de Vercel conectado al webhook de Sanity (sección siguiente).
+- [ ] Studio publicado con `npm run deploy`.
+- [ ] Email y WhatsApp en `src/data/demo.js` → `configuracion`. Sin WhatsApp, el botón de consulta de cada obra lleva al formulario con la obra ya escrita.
+- [ ] Disciplinas creadas con `npx sanity documents create datos-iniciales/disciplinas.json --missing` (desde `studio/`).
+- [ ] Envío de prueba del formulario y confirmar que llega el mail.
+- [ ] DNS de celiagomezperea.com apuntando a Vercel.
 
 ## Reconstruir el sitio cuando se publica en Sanity
 

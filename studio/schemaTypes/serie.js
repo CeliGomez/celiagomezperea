@@ -5,31 +5,33 @@ import {maximoMarcados, slugUnico} from './validaciones.js'
 
 export const serie = defineType({
   name: 'serie',
-  title: 'Serie',
+  // En el panel se llama "Obra": una obra reúne varios cuadros (por ejemplo, Una vez vi blanco).
+  title: 'Obra',
   type: 'document',
   fields: [
     defineField({
       name: 'nombre',
-      title: 'Nombre',
+      title: 'Nombre de la obra',
       type: 'string',
-      description: 'El nombre real de la serie, tal como lo usa la artista.',
-      validation: (rule) => rule.required().error('Escribí el nombre de la serie.'),
+      description: 'Por ejemplo: Una vez vi blanco.',
+      validation: (rule) => rule.required().error('Escribí el nombre de la obra.'),
     }),
     defineField({
       name: 'slug',
       title: 'Dirección de la página',
       type: 'slug',
-      description: 'Se arma sola a partir del nombre y forma el link /series/…. Tocá “Generar”.',
+      description: 'Escribí el nombre arriba y tocá “Generar”. Es el link de la página.',
       options: {source: 'nombre', maxLength: 96},
       validation: (rule) =>
         slugUnico(
           rule.required().error('Generá la dirección a partir del nombre.'),
           ['serie'],
-          'Ya hay otra serie con esa dirección. Elegí otra.',
+          'Ya hay otra obra con esa dirección. Cambiá una palabra.',
         ),
     }),
     defineField({
       name: 'disciplina',
+      hidden: true,
       title: 'Disciplina',
       type: 'reference',
       to: [{type: 'disciplina'}],
@@ -37,46 +39,47 @@ export const serie = defineType({
     }),
     defineField({
       name: 'descripcion',
-      title: 'Descripción conceptual',
+      title: 'Texto de la obra',
       type: 'array',
       of: [textoEnriquecido],
-      description: 'El texto de la serie, en pocas líneas. Si todavía no está escrito, dejalo vacío.',
+      description: 'Opcional. Unas líneas sobre la obra.',
     }),
     defineField({
       name: 'anio',
       title: 'Año o período',
       type: 'string',
-      description: 'Solo si está confirmado. Puede ser un año (2008) o un período (2007–2008). Si hay dudas, dejalo vacío.',
+      description: 'Opcional. Un año (2008) o un período (2007–2008).',
     }),
     defineField({
       name: 'tecnicaGeneral',
       title: 'Técnica general',
       type: 'string',
-      description: 'Opcional. Una técnica que describa la serie en conjunto, no la de un cuadro suelto.',
+      description: 'Opcional. Ejemplo: Óleo y tinta sobre tela.',
     }),
     campoImagen({
       name: 'portada',
-      title: 'Imagen de portada',
+      title: 'Foto de portada',
       description:
-        'Opcional. Una foto de la serie. No uses una obra de otra serie. Si no hay foto, el sitio muestra el espacio pendiente.',
+        'Opcional. Si la dejás vacía, se usa la foto del primer cuadro.',
     }),
     defineField({
       name: 'publicada',
       title: 'Publicada',
       type: 'boolean',
-      description: 'Si no la marcás, la serie queda guardada y no se ve en el sitio.',
-      initialValue: false,
+      description: 'Si la apagás, queda guardada pero no se ve en la web.',
+      initialValue: true,
     }),
     defineField({
       name: 'orden',
       title: 'Orden',
       type: 'number',
-      description: 'Un número para ordenar las series. El más bajo aparece primero. Conviene usar 10, 20, 30.',
+      description: 'El lugar de la obra en la sección Cuadros. El número más bajo aparece primero: 10, 20, 30…',
       initialValue: 10,
       validation: (rule) => rule.integer().min(0).error('Usá un número entero, por ejemplo 10.'),
     }),
     defineField({
       name: 'destacada',
+      hidden: true,
       title: 'Destacada en Inicio',
       type: 'boolean',
       description: 'Si la marcás, puede aparecer entre las series del inicio. Podés destacar hasta 3.',
@@ -90,15 +93,15 @@ export const serie = defineType({
     }),
     defineField({
       name: 'principalInicio',
-      title: 'Serie principal del Inicio',
+      title: 'Mostrar grande en el inicio',
       type: 'boolean',
-      description: 'La serie grande del inicio. Solo puede haber una.',
+      description: 'Opcional. Si ninguna está marcada, se muestra la primera.',
       initialValue: false,
       validation: maximoMarcados(
         'serie',
         'principalInicio',
         1,
-        'Ya hay una serie principal del inicio. Desmarcá la otra para elegir esta.',
+        'Ya hay otra obra marcada para el inicio. Desmarcá esa primero.',
       ),
     }),
   ],
@@ -118,8 +121,8 @@ export const serie = defineType({
       anio: 'anio',
     },
     prepare({title, media, publicada, principal, anio}) {
-      const estado = publicada ? 'Publicada' : 'Borrador'
-      const partes = [estado, principal ? 'Principal del inicio' : '', anio].filter(Boolean)
+      const estado = publicada === false ? 'Oculta' : 'Visible'
+      const partes = [estado, principal ? 'Grande en el inicio' : '', anio].filter(Boolean)
       return {title: title || 'Sin nombre', media, subtitle: partes.join(' · ')}
     },
   },

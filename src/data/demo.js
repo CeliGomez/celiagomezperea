@@ -93,13 +93,14 @@ function obra({
 }
 
 // Las dos disciplinas que ya usa el menú. No son un catálogo cerrado: una nueva se crea en el Studio.
-// "Obras sobre papel" es el nombre con el que está armado el sitio; se puede renombrar desde el panel.
+// La disciplina de obra sobre papel se muestra como "Ilustraciones", igual que en el menú.
+// El slug sigue siendo obras-sobre-papel para no romper la URL.
 export const disciplinas = [
 	{ _id: 'disciplina-pinturas', _type: 'disciplina', nombre: 'Pinturas', slug: 'pinturas', descripcion: '', orden: 10, mostrarEnMenu: true },
 	{
 		_id: 'disciplina-obras-sobre-papel',
 		_type: 'disciplina',
-		nombre: 'Obras sobre papel',
+		nombre: 'Ilustraciones',
 		slug: 'obras-sobre-papel',
 		descripcion: 'Dibujos, registros y piezas de pequeño formato.',
 		orden: 20,
@@ -475,7 +476,7 @@ export const artista = {
 	cv: null,
 }
 
-// Filas del Inicio (Cuadros, Obras sobre papel, Audiovisual, Estación Nómade): imagen a la izquierda, texto a la derecha.
+// Filas del Inicio (Cuadros, Ilustraciones, Audiovisual, Estación Nómade): imagen a la izquierda, texto a la derecha.
 // tono: 'azul' o 'marfil'. usarMiniaturaVideo: si hay videos de Vimeo, la miniatura del primero reemplaza a la imagen de la fila.
 // La portada de Cuadros reencuadra con su propio hotspot, sin tocar el de la serie.
 export const seccionesInicio = [
@@ -494,7 +495,7 @@ export const seccionesInicio = [
 	},
 	{
 		_key: 'obras-sobre-papel',
-		titulo: 'Obras sobre papel',
+		titulo: 'Ilustraciones',
 		descripcion: disciplinas.find((item) => item.slug === 'obras-sobre-papel').descripcion,
 		textoBoton: 'Explorar',
 		enlace: '/obras/obras-sobre-papel',
@@ -528,11 +529,12 @@ export const seccionesInicio = [
 	},
 ]
 
-// Solo medios de contacto confirmados. Email y WhatsApp se agregan desde Sanity cuando estén disponibles.
+// Solo medios de contacto confirmados. El WhatsApp se agrega desde Sanity cuando esté disponible.
 export const configuracion = {
 	_id: 'configuracion',
 	_type: 'configuracion',
-	email: '',
+	// Correo de la cuenta de Web3Forms: ahí llegan las consultas del formulario.
+	email: 'estacionnomadetw@gmail.com',
 	whatsapp: '',
 	ciudad: '',
 	instagram: 'https://www.instagram.com/celiagomezperea/',

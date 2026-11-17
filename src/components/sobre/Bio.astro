@@ -16,7 +16,7 @@ const visibles = 4
 					<img
 						src={artista.retrato.src}
 						srcset={artista.retrato.srcset}
-						sizes="(min-width: 64rem) 22rem, 70vw"
+						sizes="(min-width: 64rem) 34vw, 100vw"
 						alt={artista.retrato.alt || artista.nombre}
 						width={artista.retrato.ancho}
 						height={artista.retrato.alto}
@@ -36,8 +36,9 @@ const visibles = 4
 
 	{
 		bioHtml && (
-			<section class="sobre-bio contenedor" aria-label="Biografía">
-				<div class="sobre-lectura" set:html={bioHtml} />
+			<section class="sobre-bio contenedor sobre-bloque" aria-labelledby="bio-titulo">
+				<h2 id="bio-titulo" class="titulo-seccion sobre-bloque__titulo">Biografía</h2>
+				<div class="sobre-lectura sobre-bloque__cuerpo" set:html={bioHtml} />
 			</section>
 		)
 	}
@@ -49,16 +50,16 @@ const visibles = 4
 					{artista.fraseStatement}
 				</h2>
 				<span class="filete filete--largo" aria-hidden="true" />
-				{statementHtml && <div class="sobre-lectura" set:html={statementHtml} />}
+				{statementHtml && <div class="sobre-lectura sobre-statement__texto" set:html={statementHtml} />}
 			</section>
 		)
 	}
 
 	{
 		grupos.length > 0 && (
-			<section class="sobre-trayectoria contenedor" aria-labelledby="trayectoria-titulo">
-				<h2 id="trayectoria-titulo" class="titulo-seccion">Trayectoria</h2>
-				<div class="cronologia">
+			<section class="sobre-trayectoria contenedor sobre-bloque" aria-labelledby="trayectoria-titulo">
+				<h2 id="trayectoria-titulo" class="titulo-seccion sobre-bloque__titulo">Trayectoria</h2>
+				<div class="cronologia sobre-bloque__cuerpo">
 					{grupos.map((grupo) => {
 						const primeros = grupo.items.slice(0, visibles)
 						const resto = grupo.items.slice(visibles)
@@ -250,11 +251,80 @@ const visibles = 4
 		padding-top: 2.5rem;
 	}
 
+	/* En celulares el retrato ocupa todo el ancho. */
+	@media (max-width: 47.99rem) {
+		.sobre-presentacion__foto {
+			width: 100%;
+		}
+	}
+
+	@media (min-width: 48rem) and (max-width: 63.99rem) {
+		.sobre-presentacion__foto {
+			width: min(100%, 22rem);
+		}
+	}
+
+	/* Desktop: diseño editorial a dos columnas. Títulos a la izquierda (columnas 1–4),
+	   lectura a la derecha (5–12): la página usa todo el ancho sin estirar las líneas de texto. */
 	@media (min-width: 64rem) {
 		.sobre-presentacion {
-			grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
-			gap: 3rem;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			column-gap: var(--col-gap);
 			align-items: center;
+		}
+
+		.sobre-presentacion__foto {
+			grid-column: 1 / 6;
+			width: 100%;
+		}
+
+		.sobre-presentacion__texto {
+			grid-column: 7 / 13;
+		}
+
+		.sobre-presentacion__corta {
+			font-size: 1.125rem;
+		}
+
+		.sobre-bloque {
+			display: grid;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			column-gap: var(--col-gap);
+			align-items: start;
+		}
+
+		.sobre-bloque__titulo {
+			grid-column: 1 / 5;
+			position: sticky;
+			top: 7rem;
+		}
+
+		.sobre-bloque__cuerpo {
+			grid-column: 5 / 12;
+			margin-top: 0;
+		}
+
+		.sobre-statement {
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			column-gap: var(--col-gap);
+			justify-items: stretch;
+		}
+
+		.sobre-statement__frase {
+			grid-column: 1 / 11;
+		}
+
+		.sobre-statement .filete {
+			grid-column: 1 / 3;
+		}
+
+		.sobre-statement__texto {
+			grid-column: 5 / 12;
+		}
+
+		.sobre-trayectoria .cronologia {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			column-gap: var(--col-gap);
 		}
 	}
 </style>

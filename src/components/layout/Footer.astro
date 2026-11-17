@@ -149,6 +149,11 @@ const firmante = nombre || 'Celia Gómez Perea'
 		stroke-linejoin: round;
 	}
 
+	/* El email no se corta a mitad de palabra. */
+	.site-footer__email {
+		white-space: nowrap;
+	}
+
 	.site-footer__email svg {
 		color: var(--dorado);
 	}

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 	  El archivo se pide recién cuando la diapositiva activa o la siguiente es esa (nunca al cargar la página).
 	- Se pausa con el botón, con el mouse o el foco sobre los controles y con la pestaña oculta.
 	- Con movimiento reducido o ahorro de datos: sin autoplay, sin zoom y sin videos (se ve su póster).
+	- En celulares (menos de 48rem) tampoco se cargan los videos: se ve su póster.
 */
 
 const DURACION_FOTO = 6000
@@ -25,8 +26,16 @@ function usarPreferencias() {
 		const actualizar = () => setReducido(consulta.matches)
 		actualizar()
 		consulta.addEventListener('change', actualizar)
-		setAhorro(Boolean(navigator.connection?.saveData))
-		return () => consulta.removeEventListener('change', actualizar)
+		// En celulares el video del hero (más de 2 MB) no se descarga: se ve su póster.
+		// Así la primera carga con datos móviles no gasta de más.
+		const movil = window.matchMedia('(max-width: 47.99rem)')
+		const actualizarAhorro = () => setAhorro(Boolean(navigator.connection?.saveData) || movil.matches)
+		actualizarAhorro()
+		movil.addEventListener('change', actualizarAhorro)
+		return () => {
+			consulta.removeEventListener('change', actualizar)
+			movil.removeEventListener('change', actualizarAhorro)
+		}
 	}, [])
 	return { reducido, ahorro }
 }

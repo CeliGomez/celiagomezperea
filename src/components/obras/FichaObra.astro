@@ -1,5 +1,5 @@
 ---
-import { rutaSerie } from '../../lib/rutas.js'
+import { rutaSerie, rutas } from '../../lib/rutas.js'
 
 const { obra, whatsapp = '', envio = '', anterior = null, siguiente = null, enSerie = null } = Astro.props
 
@@ -48,7 +48,16 @@ function consultaWhatsapp(numero, titulo, anio) {
 	return `https://wa.me/${digitos}?text=${encodeURIComponent(texto)}`
 }
 
-const linkConsulta = consultaWhatsapp(whatsapp, obra?.titulo, obra?.anio)
+// Sin WhatsApp, la consulta va al formulario de contacto con la obra ya escrita en el mensaje.
+function consultaFormulario(titulo, anio) {
+	if (!titulo) return ''
+	const detalle = anio ? ` (${anio})` : ''
+	return `${rutas.contacto}?obra=${encodeURIComponent(`${titulo}${detalle}`)}#contacto-form`
+}
+
+const linkWhatsapp = consultaWhatsapp(whatsapp, obra?.titulo, obra?.anio)
+const linkConsulta = linkWhatsapp || consultaFormulario(obra?.titulo, obra?.anio)
+const consultaExterna = Boolean(linkWhatsapp)
 const textoConsulta = vendida ? 'Consultar por obras similares' : estado ? 'Consultar por esta obra' : 'Consultar sobre esta obra'
 const hrefSerie = serie?.slug ? rutaSerie(serie.slug) : ''
 ---
@@ -94,7 +103,12 @@ const hrefSerie = serie?.slug ? rutaSerie(serie.slug) : ''
 
 		{
 			linkConsulta && (
-				<a class="btn btn-outline detalle-consulta" href={linkConsulta} target="_blank" rel="noopener noreferrer">
+				<a
+					class="btn btn-outline detalle-consulta"
+					href={linkConsulta}
+					target={consultaExterna ? '_blank' : undefined}
+					rel={consultaExterna ? 'noopener noreferrer' : undefined}
+				>
 					{textoConsulta}
 					<span class="arrow" aria-hidden="true">→</span>
 				</a>
