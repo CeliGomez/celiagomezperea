@@ -1,0 +1,283 @@
+---
+import { urlFor } from '../../lib/sanity.js'
+
+const { cuadros = [] } = Astro.props
+---
+
+<section class="cuadros-destacados" aria-labelledby="cuadros-destacados-titulo" data-cuadros-destacados>
+  <div class="cuadros-destacados__contenedor">
+    <header class="cuadros-destacados__encabezado">
+      <h2 id="cuadros-destacados-titulo">Obra seleccionada</h2>
+      <div class="cuadros-destacados__acciones">
+        <a class="cuadros-destacados__todos" href="/series">Ver todos los cuadros <span aria-hidden="true">→</span></a>
+        <div class="cuadros-destacados__flechas">
+          <button type="button" aria-label="Cuadros anteriores" data-cuadros-anterior disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
+          </button>
+          <button type="button" aria-label="Cuadros siguientes" data-cuadros-siguiente disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="cuadros-destacados__tira" data-cuadros-tira>
+      {cuadros.map((cuadro) => (
+        <a class="cuadros-destacados__tarjeta" href={cuadro.href}>
+          <img
+            src={urlFor(cuadro.imagen).width(1600).url()}
+            alt={cuadro.imagen?.alt || cuadro.titulo}
+            width={cuadro.relacion?.ancho}
+            height={cuadro.relacion?.alto}
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="cuadros-destacados__pie">
+            <span class="cuadros-destacados__titulo">{cuadro.titulo}</span>
+            <span class="cuadros-destacados__datos">
+              {[cuadro.obra, cuadro.dimensiones].filter(Boolean).join(' · ')}
+            </span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const iniciarTiras = () => {
+    document.querySelectorAll('[data-cuadros-destacados]').forEach((seccion) => {
+      if (seccion.dataset.inicializada) return
+      seccion.dataset.inicializada = 'true'
+      const tira = seccion.querySelector('[data-cuadros-tira]')
+      const anterior = seccion.querySelector('[data-cuadros-anterior]')
+      const siguiente = seccion.querySelector('[data-cuadros-siguiente]')
+      if (!tira || !anterior || !siguiente) return
+
+      const actualizarFlechas = () => {
+        const maximo = tira.scrollWidth - tira.clientWidth
+        anterior.disabled = tira.scrollLeft <= 1
+        siguiente.disabled = tira.scrollLeft >= maximo - 1
+      }
+      anterior.addEventListener('click', () => {
+        tira.scrollBy({ left: -tira.clientWidth * 0.8, behavior: 'smooth' })
+      })
+      siguiente.addEventListener('click', () => {
+        tira.scrollBy({ left: tira.clientWidth * 0.8, behavior: 'smooth' })
+      })
+      tira.addEventListener('scroll', actualizarFlechas, { passive: true })
+      window.addEventListener('resize', actualizarFlechas)
+      tira.querySelectorAll('img').forEach((imagen) => {
+        imagen.addEventListener('load', actualizarFlechas, { once: true })
+      })
+      actualizarFlechas()
+    })
+  }
+
+  iniciarTiras()
+  document.addEventListener('astro:page-load', iniciarTiras)
+</script>
+
+<style>
+  .cuadros-destacados {
+    overflow: hidden;
+    background: var(--blanco-calido);
+    padding-block: var(--bloque);
+  }
+
+  .cuadros-destacados__contenedor {
+    max-width: var(--ancho-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .cuadros-destacados__encabezado,
+  .cuadros-destacados__acciones,
+  .cuadros-destacados__flechas {
+    display: flex;
+    align-items: center;
+  }
+
+  .cuadros-destacados__encabezado {
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .cuadros-destacados__encabezado h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    color: var(--tinta);
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cuadros-destacados__encabezado h2::after {
+    width: 2.5rem;
+    height: 1px;
+    background: var(--dorado);
+    content: '';
+  }
+
+  .cuadros-destacados__acciones {
+    gap: 1.25rem;
+  }
+
+  .cuadros-destacados__todos {
+    color: var(--azul-medio);
+    font-family: var(--font-ui);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color 180ms var(--ease);
+  }
+
+  .cuadros-destacados__todos:hover {
+    color: var(--azul-profundo);
+  }
+
+  .cuadros-destacados__flechas {
+    gap: 0.5rem;
+  }
+
+  .cuadros-destacados__flechas button {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--tinta);
+    background: transparent;
+    color: var(--tinta);
+    cursor: pointer;
+    transition: opacity 180ms var(--ease);
+  }
+
+  .cuadros-destacados__flechas button:disabled {
+    cursor: default;
+    opacity: 0.35;
+  }
+
+  .cuadros-destacados__flechas svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.5;
+  }
+
+  .cuadros-destacados__tira {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cuadros-destacados__tira::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cuadros-destacados__tarjeta {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: inherit;
+    scroll-snap-align: start;
+    text-decoration: none;
+  }
+
+  .cuadros-destacados__tarjeta img {
+    display: block;
+    width: auto;
+    max-width: none;
+    height: 420px;
+    object-fit: contain;
+    transition: filter 220ms var(--ease);
+  }
+
+  .cuadros-destacados__tarjeta:hover img {
+    filter: brightness(1.04);
+  }
+
+  .cuadros-destacados__pie {
+    display: grid;
+    gap: 0.2rem;
+    max-width: 100%;
+  }
+
+  .cuadros-destacados__titulo {
+    overflow: hidden;
+    color: var(--tinta);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    transition: color 220ms var(--ease);
+    white-space: nowrap;
+  }
+
+  .cuadros-destacados__tarjeta:hover .cuadros-destacados__titulo {
+    color: var(--azul-medio);
+  }
+
+  .cuadros-destacados__datos {
+    overflow: hidden;
+    color: var(--gris);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 47.99rem) {
+    .cuadros-destacados__encabezado {
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .cuadros-destacados__acciones {
+      gap: 0;
+    }
+
+    .cuadros-destacados__flechas {
+      display: none;
+    }
+
+    .cuadros-destacados__todos {
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .cuadros-destacados__tira {
+      margin-right: calc(-1 * var(--gutter));
+      padding-right: var(--gutter);
+      gap: 1.5rem;
+    }
+
+    .cuadros-destacados__tarjeta img {
+      height: 300px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cuadros-destacados__tira {
+      scroll-behavior: auto;
+    }
+  }
+</style>

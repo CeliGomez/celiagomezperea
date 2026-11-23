@@ -478,7 +478,6 @@ export const artista = {
 
 // Filas del Inicio (Cuadros, Ilustraciones, Audiovisual, Estación Nómade): imagen a la izquierda, texto a la derecha.
 // tono: 'azul' o 'marfil'. usarMiniaturaVideo: si hay videos de Vimeo, la miniatura del primero reemplaza a la imagen de la fila.
-// La portada de Cuadros reencuadra con su propio hotspot, sin tocar el de la serie.
 export const seccionesInicio = [
 	{
 		_key: 'cuadros',
@@ -487,8 +486,13 @@ export const seccionesInicio = [
 		textoBoton: 'Explorar',
 		enlace: '/series',
 		imagen: {
-			...series.find((item) => item.slug === 'en-que-sala-te-esperas').portada,
-			hotspot: { x: 0.52, y: 0.36, width: 1, height: 1 },
+			...foto(
+				'portadas/portada-cuadros.webp',
+				960,
+				1280,
+				'Celia Gómez Perea sentada en una silla turquesa en su taller, entre dos cuadros de gran formato, frente a una pared violeta.',
+			),
+			hotspot: { x: 0.35, y: 0.35, width: 1, height: 1 },
 		},
 		tono: 'azul',
 		usarMiniaturaVideo: false,
@@ -499,7 +503,15 @@ export const seccionesInicio = [
 		descripcion: disciplinas.find((item) => item.slug === 'obras-sobre-papel').descripcion,
 		textoBoton: 'Explorar',
 		enlace: '/obras/obras-sobre-papel',
-		imagen: disciplinas.find((item) => item.slug === 'obras-sobre-papel').portada,
+		imagen: {
+			...foto(
+				'portadas/portada-ilustraciones.webp',
+				1080,
+				1080,
+				'Ilustración de Celia Gómez Perea: trazos celestes y rojos sobre fondo oscuro, con un corazón al centro y el texto Portal Derecha.',
+			),
+			hotspot: { x: 0.5, y: 0.5, width: 1, height: 1 },
+		},
 		tono: 'marfil',
 		usarMiniaturaVideo: false,
 	},
@@ -509,10 +521,17 @@ export const seccionesInicio = [
 		descripcion: 'Producción audiovisual de Celia Gómez Perea. Sus piezas se publican en Vimeo.',
 		textoBoton: 'Explorar',
 		enlace: '/audiovisual',
-		// Foto de respaldo mientras no haya videos cargados.
-		imagen: artista.heroAudiovisual.imagen,
+		imagen: {
+			...foto(
+				'portadas/portada-audiovisual.webp',
+				960,
+				1280,
+				'Celia Gómez Perea sentada en el piso del taller, ordenando cables para una proyección.',
+			),
+			hotspot: { x: 0.45, y: 0.17, width: 1, height: 1 },
+		},
 		tono: 'azul',
-		usarMiniaturaVideo: true,
+		usarMiniaturaVideo: false,
 	},
 	{
 		_key: 'estacion-nomade',

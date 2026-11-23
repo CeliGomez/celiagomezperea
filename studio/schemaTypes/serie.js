@@ -93,6 +93,7 @@ export const serie = defineType({
     }),
     defineField({
       name: 'principalInicio',
+      hidden: true,
       title: 'Mostrar grande en el inicio',
       type: 'boolean',
       description: 'Opcional. Si ninguna está marcada, se muestra la primera.',

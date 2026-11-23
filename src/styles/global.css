@@ -40,9 +40,9 @@
   /* Ancho de lectura para textos largos. Los títulos no lo usan. */
   --medida: 40rem;
   --col-gap: 1rem;
-  --font-display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
-  --font-ui: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant", Georgia, "Times New Roman", serif;
+  --font-ui: var(--font-instrument-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   /* Compatibilidad: los títulos de obra que usaban la serif itálica pasan a Cormorant. */
   --font-serif: var(--font-display);
   /* Escala fluida. El tope del hero queda dentro de 56–76 px para que el título no se parta de más. */

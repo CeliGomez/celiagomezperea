@@ -192,16 +192,15 @@ export const obra = defineType({
     }),
     defineField({
       name: 'destacadaEnInicio',
-      hidden: true,
-      title: 'Destacada',
+      title: 'Destacar en el inicio',
       type: 'boolean',
-      description: 'Si la marcás, puede aparecer destacada. Podés destacar hasta 4 obras.',
+      description: 'Aparece en la tira de cuadros del inicio. Podés destacar hasta 10.',
       initialValue: false,
       validation: maximoMarcados(
         'obra',
         'destacadaEnInicio',
-        4,
-        'Ya hay 4 obras destacadas en el inicio. Desmarcá una para poder marcar esta.',
+        10,
+        'Ya hay 10 cuadros destacados en el inicio. Desmarcá uno para poder marcar este.',
       ),
     }),
     defineField({

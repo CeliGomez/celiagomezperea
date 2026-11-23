@@ -1342,6 +1342,102 @@ export async function fetchSeriesDestacadas({excluir = ''} = {}) {
   return (series || []).map((serie) => prepararSerie(serie))
 }
 
+function textoMedidas(altoCm, anchoCm) {
+  const alto = Number(altoCm)
+  const ancho = Number(anchoCm)
+  if (alto > 0 && ancho > 0) return `${alto} × ${ancho} cm`
+  if (alto > 0) return `${alto} cm`
+  if (ancho > 0) return `${ancho} cm`
+  return ''
+}
+
+function prepararCuadroDestacado(obra) {
+  if (!obra?.slug || !imagenDisponible(obra.imagenPrincipal)) return null
+  return {
+    titulo: obra.titulo || '',
+    href: `/obras/${obra.slug}`,
+    obra: obra.serie?.nombre || '',
+    anio: obra.anio ?? null,
+    dimensiones: textoMedidas(obra.altoCm, obra.anchoCm),
+    imagen: obra.imagenPrincipal,
+    relacion: relacionConfiable(obra.imagenPrincipal),
+  }
+}
+
+export async function fetchCuadrosDestacados() {
+  if (enDemo) {
+    const obras = obrasDemo()
+    const marcadas = obras
+      .filter(
+        (obra) =>
+          obra.slug && obra.destacadaEnInicio && imagenDisponible(obra.imagenPrincipal),
+      )
+      .slice(0, 10)
+    if (marcadas.length) return marcadas.map(prepararCuadroDestacado).filter(Boolean)
+
+    const cuadros = []
+    const agregadas = new Set()
+    for (const serie of seriesPublicadasDemo()) {
+      const primera = obras
+        .filter((obra) => obra.serie?.slug === serie.slug && imagenDisponible(obra.imagenPrincipal))
+        .sort((a, b) => (a.ordenEnSerie ?? 999999) - (b.ordenEnSerie ?? 999999))[0]
+      if (primera) {
+        cuadros.push(primera)
+        agregadas.add(primera.slug)
+      }
+    }
+    cuadros.push(
+      ...obras
+        .filter(
+          (obra) =>
+            !obra.serie?.slug &&
+            !agregadas.has(obra.slug) &&
+            imagenDisponible(obra.imagenPrincipal),
+        )
+        .sort((a, b) => (a.ordenGaleria ?? 999999) - (b.ordenGaleria ?? 999999)),
+    )
+    return cuadros.slice(0, 10).map(prepararCuadroDestacado).filter(Boolean)
+  }
+
+  const marcadas = await client.fetch(
+    `*[_type == "obra" && destacadaEnInicio == true && defined(slug.current) && defined(imagenPrincipal.asset) && ${VISIBLE}]
+      | order(_createdAt asc)[0...10] {
+        titulo,
+        "slug": slug.current,
+        anio,
+        altoCm,
+        anchoCm,
+        imagenPrincipal ${imagen},
+        "serie": serie->{ nombre, "slug": slug.current }
+      }`,
+  )
+  if (marcadas?.length) return marcadas.map(prepararCuadroDestacado).filter(Boolean)
+
+  const obras = await client.fetch(
+    `*[_type == "obra" && defined(slug.current) && defined(imagenPrincipal.asset) && ${VISIBLE}]
+      | order(coalesce(serie->orden, ordenGaleria, 999999) asc, coalesce(ordenEnSerie, ordenGaleria, 999999) asc, _createdAt asc) {
+        "_id": _id,
+        titulo,
+        "slug": slug.current,
+        anio,
+        altoCm,
+        anchoCm,
+        imagenPrincipal ${imagen},
+        "serie": serie->{ "_id": _id, nombre, "slug": slug.current }
+      }`,
+  )
+  const cuadros = []
+  const agregadas = new Set()
+  for (const obra of obras || []) {
+    const grupo = obra.serie?._id || obra._id
+    if (agregadas.has(grupo)) continue
+    agregadas.add(grupo)
+    cuadros.push(obra)
+    if (cuadros.length === 10) break
+  }
+  return cuadros.map(prepararCuadroDestacado).filter(Boolean)
+}
+
 export async function fetchVecinasEnSerie(slug) {
   if (!slug) return {anterior: null, siguiente: null}
   if (enDemo) {

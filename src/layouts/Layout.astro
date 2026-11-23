@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { Font } from 'astro:assets';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import { fetchPie } from '../lib/sanity.js';
@@ -50,13 +51,9 @@ const indexar = ['true', '1', 'si', 'sí'].includes(
     {imagenOg && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
     {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Instrument+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <Font cssVariable="--font-cormorant" preload weight={400} />
+    <Font cssVariable="--font-dm-sans" />
+    <Font cssVariable="--font-instrument-sans" />
     <script is:inline>
       document.documentElement.classList.remove('no-js');
     </script>
