@@ -3,7 +3,9 @@ import Firma from './Firma.astro'
 import { rutas } from '../../lib/rutas.js'
 
 // heroAzul: la página empieza con una banda azul.
-const { instagram = '', vimeo = '', heroAzul = false } = Astro.props
+// seccion: fuerza la sección activa del menú cuando la URL no alcanza
+// (una obra de ilustraciones vive en /series/… pero pertenece a Ilustraciones).
+const { instagram = '', vimeo = '', heroAzul = false, seccion = '' } = Astro.props
 
 const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/'
 const enSeccion = (base) => pathname === base || pathname.startsWith(`${base}/`)
@@ -11,12 +13,17 @@ const enSeccion = (base) => pathname === base || pathname.startsWith(`${base}/`)
 // La sección activa sale de la URL. Cuadros incluye cada serie; Ilustraciones, la disciplina de papel.
 const nav = [
 	{ id: 'inicio', href: rutas.inicio, label: 'Inicio', activo: pathname === '/' },
-	{ id: 'cuadros', href: rutas.cuadros, label: 'Cuadros', activo: enSeccion('/series') || pathname === '/obras/pinturas' },
+	{
+		id: 'cuadros',
+		href: rutas.cuadros,
+		label: 'Cuadros',
+		activo: seccion ? seccion === 'cuadros' : enSeccion('/series') || pathname === '/obras/pinturas',
+	},
 	{
 		id: 'ilustraciones',
 		href: rutas.ilustraciones,
 		label: 'Ilustraciones',
-		activo: pathname === rutas.ilustraciones,
+		activo: seccion ? seccion === 'ilustraciones' : pathname === rutas.ilustraciones,
 	},
 	{ id: 'audiovisual', href: rutas.audiovisual, label: 'Audiovisual', activo: enSeccion('/audiovisual') },
 	{ id: 'sobre', href: rutas.sobreMi, label: 'La artista', activo: enSeccion('/sobre-mi') },

@@ -17,6 +17,14 @@ export const obra = defineType({
   // En el panel: cada cuadro de una obra (serie) o cada ilustración.
   title: 'Cuadro o ilustración',
   type: 'document',
+  fieldsets: [
+    {
+      name: 'medidas',
+      title: 'Medidas',
+      description: 'Opcional. En centímetros. En la web se ve como “100 × 70 cm”.',
+      options: {columns: 2},
+    },
+  ],
   fields: [
     defineField({
       name: 'titulo',
@@ -103,14 +111,16 @@ export const obra = defineType({
       name: 'altoCm',
       title: 'Alto (cm)',
       type: 'number',
-      description: 'Opcional. Solo el número.',
+      fieldset: 'medidas',
+      description: 'Solo el número, por ejemplo 100.',
       validation: (rule) => rule.positive().max(2000).error('Ingresá el alto en centímetros, por ejemplo 100.'),
     }),
     defineField({
       name: 'anchoCm',
       title: 'Ancho (cm)',
       type: 'number',
-      description: 'Opcional. Solo el número.',
+      fieldset: 'medidas',
+      description: 'Solo el número, por ejemplo 70.',
       validation: (rule) => rule.positive().max(2000).error('Ingresá el ancho en centímetros, por ejemplo 80.'),
     }),
     defineField({

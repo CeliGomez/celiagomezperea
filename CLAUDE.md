@@ -15,7 +15,7 @@ Respondé siempre en español rioplatense.
 - Antes de editar, revisá los componentes existentes y reutilizá lo que sirva. No rehacer lo que funciona: Vimeo en modal, lightbox, formulario con Web3Forms, noindex, carga progresiva de imágenes, View Transitions.
 - Las rutas existentes siguen funcionando: /, /obras, /obras/[slug], /series, /series/[slug], /audiovisual, /sobre-mi, /contacto.
 - Sanity guarda solo obras (tipo serie), cuadros e ilustraciones (tipo obra) y las dos disciplinas. Todo lo demás (inicio, la artista, audiovisual, contacto, fragmentos) es contenido fijo en src/data/demo.js: CONTENIDO_FIJO en src/lib/sanity.js.
-- Panel simplificado (studio/structure.js + studio/plantillas.js): 1 · Obras, 2 · Cuadros, Ilustraciones. Las plantillas completan serie, disciplina y orden.
+- Panel simplificado (studio/structure.js + studio/plantillas.js): Cuadros (1 · Obras, 2 · Cuadros) e Ilustraciones (1 · Obras, 2 · Ilustraciones, sueltas). Una obra de ilustraciones es una serie con disciplina obras-sobre-papel: se muestra en Ilustraciones, no en Cuadros. Las plantillas completan serie, disciplina y orden.
 - Nombres en pantalla: el menú manda. /series se titula "Cuadros" y la disciplina obras-sobre-papel se muestra como "Ilustraciones".
 - Al terminar una etapa: build, capturas a 1440 y 390 px de las páginas tocadas, lista de archivos modificados y por qué. Frenar hasta que valide.
 - No hacer commits ni push.

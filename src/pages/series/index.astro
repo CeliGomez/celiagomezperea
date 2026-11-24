@@ -3,7 +3,8 @@ import Layout from '../../layouts/Layout.astro'
 import ListadoSeries from '../../components/series/ListadoSeries.astro'
 import { fetchInicio, fetchSeries } from '../../lib/sanity.js'
 
-const series = await fetchSeries()
+// Las obras de ilustración se muestran en Ilustraciones, no acá.
+const series = await fetchSeries({ excluirDisciplina: 'obras-sobre-papel' })
 const { artista, configuracion } = await fetchInicio()
 const nombre = artista?.nombre || ''
 const titulo = nombre ? `Cuadros — ${nombre}` : 'Cuadros'

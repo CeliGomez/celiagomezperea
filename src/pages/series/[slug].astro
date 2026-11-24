@@ -15,6 +15,11 @@ const { artista, configuracion } = await fetchInicio()
 const nombre = artista?.nombre || ''
 const titulo = serie ? (nombre ? `${serie.nombre} — ${nombre}` : serie.nombre) : 'Serie'
 const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'Serie')
+// Las obras de ilustración vuelven a Ilustraciones; las de cuadros, a Cuadros.
+const esIlustracion = serie?.disciplina?.slug === 'obras-sobre-papel'
+const volver = esIlustracion
+	? { href: rutas.ilustraciones, texto: 'Todas las ilustraciones' }
+	: { href: rutas.series, texto: 'Todas las series' }
 ---
 
 {
@@ -22,6 +27,7 @@ const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'S
 		<Layout
 			title={titulo}
 			description={descripcion}
+			seccion={esIlustracion ? 'ilustraciones' : 'cuadros'}
 			nombre={artista?.nombre}
 			subtitulo={artista?.subtitulo}
 			email={configuracion?.email}
@@ -38,7 +44,9 @@ const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'S
 						<h1 class="presentacion__titulo">{serie.nombre}</h1>
 						{serie.anio && <p class="presentacion__anio">{serie.anio}</p>}
 						{serie.tecnicaGeneral && <p class="presentacion__tecnica">{serie.tecnicaGeneral}</p>}
-						{serie.descripcion && <p class="t-texto presentacion__descripcion">{serie.descripcion}</p>}
+						{serie.descripcionHtml && (
+							<div class="t-texto presentacion__descripcion" set:html={serie.descripcionHtml} />
+						)}
 					</div>
 					<div class="presentacion__portada">
 						<Imagen
@@ -66,9 +74,9 @@ const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'S
 			</section>
 
 			<nav class="recorrido contenedor" aria-label="Otras series">
-				<a class="detalle-volver__link" href={rutas.series}>
+				<a class="detalle-volver__link" href={volver.href}>
 					<span class="detalle-volver__flecha" aria-hidden="true">←</span>
-					Todas las series
+					{volver.texto}
 				</a>
 				<div class="recorrido__vecinas">
 					{serie.anterior && (
@@ -133,6 +141,10 @@ const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'S
 		max-width: 36rem;
 		margin-top: 0.5rem;
 		color: var(--blanco-calido);
+	}
+
+	.presentacion__descripcion :global(p + p) {
+		margin-top: 0.85em;
 	}
 
 	.presentacion__portada {

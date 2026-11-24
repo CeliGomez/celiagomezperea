@@ -20,6 +20,8 @@ const {
   datos = null,
   // true cuando la página empieza con una banda azul (el Inicio): el encabezado arranca transparente.
   heroAzul = false,
+  // Sección activa del menú cuando la URL no alcanza ('cuadros' o 'ilustraciones').
+  seccion = '',
 } = Astro.props;
 const jsonLd = datos ? JSON.stringify(datos).replace(/</g, '\\u003c') : ''
 const pie = await fetchPie();
@@ -59,7 +61,7 @@ const indexar = ['true', '1', 'si', 'sí'].includes(
     </script>
   </head>
   <body>
-    <Header instagram={pie.instagram || instagram} vimeo={pie.vimeo || vimeo} heroAzul={heroAzul} />
+    <Header instagram={pie.instagram || instagram} vimeo={pie.vimeo || vimeo} heroAzul={heroAzul} seccion={seccion} />
     <main>
       <slot />
     </main>

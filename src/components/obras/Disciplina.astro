@@ -43,7 +43,7 @@ const vacia = series.length === 0 && obras.length === 0
 	{
 		obras.length > 0 && (
 			<section class="disciplina__bloque contenedor" aria-labelledby="disciplina-obras">
-				<h2 id="disciplina-obras" class="titulo-seccion">Obras</h2>
+				<h2 id="disciplina-obras" class="titulo-seccion">{papel && series.length > 0 ? 'Otras ilustraciones' : 'Obras'}</h2>
 				<ColeccionObras obras={obras} papel={papel} prioridad={disciplina.portada ? 0 : 1} />
 			</section>
 		)

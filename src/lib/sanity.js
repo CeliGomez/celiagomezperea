@@ -3,7 +3,7 @@ import {join} from 'node:path'
 import {createClient} from '@sanity/client'
 import {createImageUrlBuilder} from '@sanity/image-url'
 import * as demo from '../data/demo.js'
-import {textoDePortable} from './texto.js'
+import {htmlDePortable, textoDePortable} from './texto.js'
 import {resolverEnlace, rutaDisciplina, rutaSerie} from './rutas.js'
 
 const API_VERSION = '2026-11-05'
@@ -1120,6 +1120,8 @@ const proyeccionObraLista = `{
   proyecto,
   ordenEnSerie,
   ordenGaleria,
+  altoCm,
+  anchoCm,
   imagenPrincipal ${imagen},
   "serie": serie->{ nombre, "slug": slug.current },
   "disciplina": disciplina->{ nombre, "slug": slug.current }
@@ -1165,6 +1167,16 @@ function prepararSerie(serie, obras) {
     : (obras || []).filter((obra) => obra.serie?.slug === serie.slug).length
   const descripcion =
     typeof serie.descripcion === 'string' ? serie.descripcion.trim() : textoDePortable(serie.descripcion)
+  // Presentación de la obra con sus párrafos (para la página de la serie).
+  const descripcionHtml =
+    typeof serie.descripcion === 'string'
+      ? serie.descripcion
+          .split(/\n\s*\n/)
+          .map((parrafo) => parrafo.trim())
+          .filter(Boolean)
+          .map((parrafo) => `<p>${parrafo.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>`)
+          .join('')
+      : htmlDePortable(serie.descripcion)
   return {
     nombre: serie.nombre || '',
     slug: serie.slug || '',
@@ -1172,6 +1184,7 @@ function prepararSerie(serie, obras) {
     disciplina: normalizarDisciplina(serie.disciplina),
     portada: portadaDeSerie(serie, obras),
     descripcion,
+    descripcionHtml,
     anio: String(serie.anio || '').trim(),
     tecnicaGeneral: String(serie.tecnicaGeneral || '').trim(),
     cantidadObras,
@@ -1181,14 +1194,27 @@ function prepararSerie(serie, obras) {
   }
 }
 
+// Slug de la disciplina de ilustraciones (en el menú se llama "Ilustraciones").
+const PAPEL = 'obras-sobre-papel'
+
 function seriesPublicadasDemo() {
   return [...(demo.series || [])].filter((serie) => serie.publicada !== false).sort(porOrden)
+}
+
+// Medidas para mostrar: "100 × 70 cm" (alto × ancho). Si hay una sola, "100 cm".
+export function textoMedidas(altoCm, anchoCm) {
+  const numero = (valor) => (Number(valor) > 0 ? new Intl.NumberFormat('es-AR', {maximumFractionDigits: 1}).format(Number(valor)) : '')
+  const alto = numero(altoCm)
+  const ancho = numero(anchoCm)
+  if (alto && ancho) return `${alto} × ${ancho} cm`
+  return alto || ancho ? `${alto || ancho} cm` : ''
 }
 
 function obraDeLista(obra) {
   return {
     ...prepararObraGaleria(obra),
     ordenEnSerie: obra.ordenEnSerie ?? null,
+    medidas: textoMedidas(obra.altoCm, obra.anchoCm) || String(obra.dimensiones || '').trim(),
   }
 }
 
@@ -1220,16 +1246,20 @@ export async function fetchDisciplinas() {
   return disciplinas.map(prepararDisciplina)
 }
 
-export async function fetchSeries({disciplina = ''} = {}) {
+// disciplina: solo las series de esa disciplina. excluirDisciplina: todas menos esa
+// (la página Cuadros excluye las obras de ilustración, que van en Ilustraciones).
+export async function fetchSeries({disciplina = '', excluirDisciplina = ''} = {}) {
   if (enDemo) {
     return seriesPublicadasDemo()
       .filter((serie) => !disciplina || serie.disciplina === disciplina)
+      .filter((serie) => !excluirDisciplina || serie.disciplina !== excluirDisciplina)
       .map((serie) => prepararSerie(serie, obrasDemo()))
   }
   const series = await client.fetch(
-    `*[_type == "serie" && ${VISIBLE} && ($disciplina == "" || disciplina->slug.current == $disciplina)]
+    `*[_type == "serie" && ${VISIBLE} && ($disciplina == "" || disciplina->slug.current == $disciplina)
+      && ($excluir == "" || coalesce(disciplina->slug.current, "") != $excluir)]
       | order(coalesce(orden, 999999) asc) ${proyeccionSerie}`,
-    {disciplina},
+    {disciplina, excluir: excluirDisciplina},
   )
   return (series || []).map((serie) => prepararSerie(serie))
 }
@@ -1237,7 +1267,10 @@ export async function fetchSeries({disciplina = ''} = {}) {
 export async function fetchSerie(slug) {
   if (!slug) return null
   if (enDemo) {
-    const series = seriesPublicadasDemo()
+    const actual = seriesPublicadasDemo().find((item) => item.slug === slug)
+    const series = seriesPublicadasDemo().filter(
+      (item) => (item.disciplina === PAPEL) === (actual?.disciplina === PAPEL),
+    )
     const indice = series.findIndex((item) => item.slug === slug)
     if (indice < 0) return null
     return {
@@ -1249,18 +1282,20 @@ export async function fetchSerie(slug) {
   }
   const serie = await client.fetch(`*[_type == "serie" && slug.current == $slug && ${VISIBLE}][0] ${proyeccionSerie}`, {slug})
   if (!serie) return null
+  const papel = serie.disciplina?.slug === PAPEL
+  const mismoTipo = `(coalesce(disciplina->slug.current, "") == "${PAPEL}") == $papel`
   const [obras, anterior, siguiente] = await Promise.all([
     client.fetch(
       `*[_type == "obra" && serie->slug.current == $slug && ${VISIBLE}] | order(coalesce(ordenEnSerie, 999999) asc) ${proyeccionObraLista}`,
       {slug},
     ),
     client.fetch(
-      `*[_type == "serie" && ${VISIBLE} && coalesce(orden, 999999) < $orden] | order(coalesce(orden, 999999) desc)[0] ${proyeccionSerie}`,
-      {orden: serie.orden ?? 999999},
+      `*[_type == "serie" && ${VISIBLE} && ${mismoTipo} && coalesce(orden, 999999) < $orden] | order(coalesce(orden, 999999) desc)[0] ${proyeccionSerie}`,
+      {orden: serie.orden ?? 999999, papel},
     ),
     client.fetch(
-      `*[_type == "serie" && ${VISIBLE} && coalesce(orden, 999999) > $orden] | order(coalesce(orden, 999999) asc)[0] ${proyeccionSerie}`,
-      {orden: serie.orden ?? 999999},
+      `*[_type == "serie" && ${VISIBLE} && ${mismoTipo} && coalesce(orden, 999999) > $orden] | order(coalesce(orden, 999999) asc)[0] ${proyeccionSerie}`,
+      {orden: serie.orden ?? 999999, papel},
     ),
   ])
   return {
@@ -1340,15 +1375,6 @@ export async function fetchSeriesDestacadas({excluir = ''} = {}) {
     {excluir},
   )
   return (series || []).map((serie) => prepararSerie(serie))
-}
-
-function textoMedidas(altoCm, anchoCm) {
-  const alto = Number(altoCm)
-  const ancho = Number(anchoCm)
-  if (alto > 0 && ancho > 0) return `${alto} × ${ancho} cm`
-  if (alto > 0) return `${alto} cm`
-  if (ancho > 0) return `${ancho} cm`
-  return ''
 }
 
 function prepararCuadroDestacado(obra) {

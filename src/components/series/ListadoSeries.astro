@@ -87,9 +87,14 @@ const modo = series.length <= 1 ? 'una' : series.length === 2 ? 'dos' : 'varias'
 	}
 
 	.pieza__descripcion {
+		display: -webkit-box;
 		max-width: 34rem;
 		margin-top: 0.75rem;
+		overflow: hidden;
 		color: var(--tinta);
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
 	}
 
 	.pieza:focus-visible {

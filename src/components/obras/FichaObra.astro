@@ -34,8 +34,10 @@ const precio = precioVisible(obra)
 const ficha = [
 	obra?.anio != null && obra.anio !== '' ? ['Año', String(obra.anio)] : null,
 	obra?.tecnica ? ['Técnica', obra.tecnica] : null,
-	alto ? ['Alto', alto] : null,
-	ancho ? ['Ancho', ancho] : null,
+	// Alto × ancho en una sola fila, para comparar fácil entre cuadros.
+	alto && ancho ? ['Medidas', `${alto.replace(' cm', '')} × ${ancho}`] : null,
+	alto && !ancho ? ['Alto', alto] : null,
+	ancho && !alto ? ['Ancho', ancho] : null,
 	!alto && !ancho && obra?.dimensiones ? ['Medidas', obra.dimensiones] : null,
 	precio ? ['Precio', precio] : null,
 ].filter(Boolean)

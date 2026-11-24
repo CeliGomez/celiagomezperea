@@ -36,11 +36,12 @@ npm run dev            # en local: http://localhost:3333
 npm run deploy         # publica el panel en https://<nombre>.sanity.studio
 ```
 
-Después del deploy, Celia carga desde esa URL, sin tocar el código. El panel tiene solo tres entradas:
+Después del deploy, Celia carga desde esa URL, sin tocar el código. El panel tiene dos secciones:
 
-- **1 · Obras**: cada obra que reúne varios cuadros (por ejemplo, *Una vez vi blanco*).
-- **2 · Cuadros**: se elige la obra y se cargan sus cuadros. La obra, la disciplina y el número de orden se completan solos.
-- **Ilustraciones**: piezas sueltas sobre papel.
+- **Cuadros → 1 · Obras**: cada obra que reúne varios cuadros (por ejemplo, *Una vez vi blanco*).
+- **Cuadros → 2 · Cuadros**: se elige la obra y se cargan sus cuadros. La obra, la disciplina y el número de orden se completan solos.
+- **Ilustraciones → 1 · Obras / 2 · Ilustraciones**: lo mismo, para obras de ilustraciones sobre papel. Se ven en la sección Ilustraciones.
+- **Ilustraciones → Ilustraciones sueltas**: piezas sin obra.
 
 El resto del sitio (inicio, la artista, audiovisual, contacto) es contenido fijo en `src/data/demo.js`.
 

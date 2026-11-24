@@ -39,10 +39,11 @@ export const serie = defineType({
     }),
     defineField({
       name: 'descripcion',
-      title: 'Texto de la obra',
+      title: 'Presentación de la obra',
       type: 'array',
       of: [textoEnriquecido],
-      description: 'Opcional. Unas líneas sobre la obra.',
+      description:
+        'Opcional. El texto que presenta la obra; se lee arriba, junto a la portada. Para un párrafo nuevo, apretá Enter.',
     }),
     defineField({
       name: 'anio',
