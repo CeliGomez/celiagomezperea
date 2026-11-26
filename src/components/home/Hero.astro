@@ -7,7 +7,9 @@ import { esExterno } from '../../lib/rutas.js'
 /*
 	Hero cinematográfico del Inicio.
 	- Fondo: carrusel de fotos y videos a pantalla completa (HeroCarrusel.jsx).
-	- Encima: capa azul profundo (más densa a la izquierda, donde va el texto) y la textura procedural, sutil.
+	- Encima: un degradado azul profundo solo del lado del texto (izquierda en compu, abajo en celu)
+	  que se apaga antes de la mitad: el resto de la foto o el video se ve limpio, sin tinte.
+	- Carrusel en loop, sin controles a la vista y sin acercamiento.
 	- Texto fijo, editable (artista.heroInicio): no cambia con las diapositivas.
 
 	diapositivas: salida de fetchDiapositivasHero(). texto: salida de fetchHeroInicio().
@@ -145,46 +147,33 @@ const hayFondo = preparadas.length > 0
 		background: transparent;
 	}
 
-	/* Acercamiento lentísimo, solo en las fotos y mientras están activas. */
-	.hero__fondo--zoom img {
-		transform: scale(1);
-		transform-origin: var(--posicion, 50% 50%);
-	}
-
-	.hero__fondo--zoom.is-activa img {
-		animation: hero-acercamiento 7.5s linear forwards;
-	}
-
-	@keyframes hero-acercamiento {
-		to {
-			transform: scale(1.045);
-		}
-	}
-
 	/* ——— Capa azul + textura (z 1) ——— */
 	.hero__capa {
 		position: absolute;
 		inset: 0;
 		z-index: 1;
 		pointer-events: none;
+		/* Arriba, apenas, para que se lea el menú; a la izquierda, detrás del texto. Se apaga al 60 %. */
 		background:
-			linear-gradient(180deg, rgb(18 57 79 / 0.55) 0%, rgb(18 57 79 / 0) 22%),
-			linear-gradient(0deg, rgb(18 57 79 / 0.7) 0%, rgb(18 57 79 / 0) 30%),
+			linear-gradient(180deg, rgb(18 57 79 / 0.45) 0%, rgb(18 57 79 / 0) 18%),
 			linear-gradient(
 				90deg,
-				rgb(18 57 79 / 0.9) 0%,
-				rgb(18 57 79 / 0.76) 28%,
-				rgb(18 57 79 / 0.32) 56%,
-				rgb(18 57 79 / 0.1) 100%
+				rgb(18 57 79 / 0.8) 0%,
+				rgb(18 57 79 / 0.6) 24%,
+				rgb(18 57 79 / 0.22) 44%,
+				rgb(18 57 79 / 0) 60%
 			);
 	}
 
 	/* La textura de pigmento y el grano de la identidad, muy suaves sobre la capa. */
+	/* La textura solo acompaña al degradado: no se apoya sobre la foto. */
 	.hero__capa::before,
 	.hero__capa::after {
 		content: '';
 		position: absolute;
 		inset: 0;
+		-webkit-mask-image: linear-gradient(90deg, black 0%, black 25%, transparent 55%);
+		mask-image: linear-gradient(90deg, black 0%, black 25%, transparent 55%);
 	}
 
 	.hero__capa::before {
@@ -207,7 +196,7 @@ const hayFondo = preparadas.length > 0
 		z-index: 2;
 		display: flex;
 		align-items: center;
-		padding-block: 8rem 9rem;
+		padding-block: 8rem 6rem;
 		pointer-events: none;
 	}
 
@@ -295,201 +284,34 @@ const hayFondo = preparadas.length > 0
 		outline-offset: 3px;
 	}
 
-	/* ——— Controles (z 3) ——— */
-	.hero__controles {
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		z-index: 3;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1.5rem;
-		padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
-	}
-
-	.hero__controles:focus-visible {
-		outline: none;
-	}
-
-	.hero__controles:focus-visible .hero__navegacion {
-		outline: 1px solid var(--dorado);
-		outline-offset: 6px;
-	}
-
-	.hero__epigrafe {
-		min-height: 1.2em;
-		margin: 0;
-		font-family: var(--font-ui);
-		font-size: 0.6875rem;
-		font-weight: 500;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: var(--azul-bruma);
-	}
-
-	.hero__epigrafe-texto {
-		display: inline-block;
-		animation: hero-epigrafe 0.9s var(--ease) both;
-	}
-
-	@keyframes hero-epigrafe {
-		from {
-			opacity: 0;
-			transform: translateY(4px);
-		}
-	}
-
-	.hero__navegacion {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.hero__indicadores {
-		display: flex;
-		gap: 0.5rem;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.hero__indicador {
-		position: relative;
-		display: block;
-		width: 2.5rem;
-		height: 1.5rem;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		cursor: pointer;
-	}
-
-	/* En pantallas táctiles, área de toque de 44 px de alto (la línea sigue siendo fina). */
-	@media (pointer: coarse) {
-		.hero__indicador {
-			height: 2.75rem;
-		}
-	}
-
-	/* Línea fina; la activa se rellena en dorado durante el tiempo que dura. */
-	.hero__indicador::before,
-	.hero__indicador-barra {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 50%;
-		height: 1px;
-	}
-
-	.hero__indicador::before {
-		background-color: color-mix(in srgb, var(--blanco-calido) 38%, transparent);
-	}
-
-	.hero__indicador-barra {
-		background-color: var(--dorado);
-		transform: scaleX(0);
-		transform-origin: left center;
-	}
-
-	.hero__indicador:hover::before {
-		background-color: var(--blanco-calido);
-	}
-
-	.hero__indicador:focus-visible {
-		outline: 1px solid var(--dorado);
-		outline-offset: 2px;
-	}
-
-	.hero__flecha,
-	.hero__pausa {
-		display: grid;
-		place-items: center;
-		width: 2.25rem;
-		height: 2.25rem;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		color: color-mix(in srgb, var(--blanco-calido) 75%, transparent);
-		cursor: pointer;
-		transition: color 0.3s var(--ease);
-	}
-
-	.hero__flecha svg {
-		width: 0.5rem;
-		height: 1rem;
-	}
-
-	.hero__pausa {
-		margin-left: 0.25rem;
-		border: 1px solid color-mix(in srgb, var(--blanco-calido) 35%, transparent);
-		border-radius: 50%;
-	}
-
-	.hero__pausa svg {
-		width: 0.625rem;
-		height: 0.625rem;
-	}
-
-	.hero__flecha:hover,
-	.hero__pausa:hover,
-	.hero__flecha:focus-visible,
-	.hero__pausa:focus-visible {
-		color: var(--dorado);
-	}
-
-	.hero__flecha:focus-visible,
-	.hero__pausa:focus-visible {
-		outline: 1px solid var(--dorado);
-		outline-offset: 2px;
-	}
-
-	/* ——— Móvil (ajuste fino en la etapa de mobile) ——— */
+	/* ——— Móvil: el texto va abajo, el degradado también ——— */
 	@media (max-width: 47.99rem) {
 		.hero__capa {
 			background:
-				linear-gradient(180deg, rgb(18 57 79 / 0.6) 0%, rgb(18 57 79 / 0) 25%),
-				linear-gradient(0deg, rgb(18 57 79 / 0.94) 0%, rgb(18 57 79 / 0.78) 45%, rgb(18 57 79 / 0.25) 80%);
+				linear-gradient(180deg, rgb(18 57 79 / 0.45) 0%, rgb(18 57 79 / 0) 16%),
+				linear-gradient(0deg, rgb(18 57 79 / 0.88) 0%, rgb(18 57 79 / 0.62) 35%, rgb(18 57 79 / 0.25) 55%, rgb(18 57 79 / 0) 70%);
+		}
+
+		.hero__capa::before,
+		.hero__capa::after {
+			-webkit-mask-image: linear-gradient(0deg, black 0%, black 25%, transparent 55%);
+			mask-image: linear-gradient(0deg, black 0%, black 25%, transparent 55%);
 		}
 
 		.hero__contenido {
 			align-items: flex-end;
-			padding-block: 7rem 6.5rem;
+			padding-block: 7rem 3.5rem;
 		}
 
 		.hero__botones {
 			flex-direction: column;
 			align-items: stretch;
 		}
-
-		.hero__epigrafe {
-			display: none;
-		}
-
-		.hero__controles {
-			justify-content: center;
-		}
-
-		.hero__flecha {
-			display: none;
-		}
-
-		.hero__indicador {
-			width: 1.75rem;
-			height: 2.75rem;
-		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.hero__fondo {
 			transition: none;
-		}
-
-		.hero__fondo--zoom.is-activa img,
-		.hero__epigrafe-texto {
-			animation: none;
 		}
 	}
 </style>

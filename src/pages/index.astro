@@ -63,11 +63,15 @@ const datos = nombre
 	datos={datos}
 >
 	<Hero diapositivas={diapositivas} texto={textoHero} />
+	<SobreArtista
+		retrato={artista?.retratoInicio || artista?.retrato}
+		bio={artista?.bioCorta || ''}
+		nombre={nombre}
+	/>
 	<FraseInicio frase={frase} />
 	<Fragmento fragmento={fragmentos['inicio-1']} pegado />
 	<CuadrosDestacados cuadros={cuadros} />
 	<SeccionesInicio secciones={secciones} />
-	<SobreArtista retrato={artista?.retrato} bio={artista?.bioCorta || ''} nombre={nombre} />
 	<Fragmento fragmento={fragmentos['inicio-2']} ocultarEnMovil />
 	<ContactoInicio
 		clave={clave}
