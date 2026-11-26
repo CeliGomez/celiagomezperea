@@ -1,61 +1,160 @@
 ---
 import Formulario from '../contacto/Formulario.jsx'
-import Trazo from '../layout/Trazo.astro'
 
-// Contacto del Inicio: reutiliza el formulario de Web3Forms (con y sin clave) en su variante en fila.
+/*
+	Contacto del Inicio, en dos columnas.
+	- Izquierda: título grande, la bajada y los contactos directos (email e Instagram).
+	- Derecha: el formulario de Web3Forms sobre una tarjeta clara (nombre y email en fila,
+	  mensaje debajo y el botón abajo a la derecha). En celular: todo uno debajo del otro.
+*/
 const { clave = '', whatsapp = '', email = '', instagram = '', vimeo = '' } = Astro.props
+const usuarioInstagram = instagram ? '@' + instagram.replace(/\/+$/, '').split('/').pop() : ''
 ---
 
-<section class="contacto-inicio ctx-marfil" aria-labelledby="contacto-inicio-titulo">
-	<Trazo class="contacto-inicio__linea" />
-	<div class="contacto-inicio__fila contenedor fade-in">
+<section class="contacto-inicio" aria-labelledby="contacto-inicio-titulo">
+	<div class="contacto-inicio__grilla contenedor fade-in">
 		<div class="contacto-inicio__intro">
 			<div class="encabezado-seccion">
-				<h2 id="contacto-inicio-titulo" class="t-seccion">Contacto</h2>
+				<p class="t-seccion">Contacto</p>
 				<span class="filete filete--largo" aria-hidden="true"></span>
 			</div>
-			<p class="t-texto contacto-inicio__texto">Consultas sobre obra, adquisiciones, proyectos o exhibiciones.</p>
+			<h2 id="contacto-inicio-titulo" class="contacto-inicio__titulo">¿Te interesa una obra?</h2>
+			<p class="contacto-inicio__texto">Consultas sobre obra, adquisiciones, proyectos o exhibiciones.</p>
+
+			{
+				(email || usuarioInstagram) && (
+					<ul class="contacto-inicio__directo">
+						{email && (
+							<li>
+								<span class="contacto-inicio__etiqueta">Email</span>
+								<a href={`mailto:${email}`}>{email}</a>
+							</li>
+						)}
+						{usuarioInstagram && (
+							<li>
+								<span class="contacto-inicio__etiqueta">Instagram</span>
+								<a href={instagram} target="_blank" rel="noopener noreferrer">
+									{usuarioInstagram}
+								</a>
+							</li>
+						)}
+					</ul>
+				)
+			}
 		</div>
-		<div class="contacto-inicio__form">
-			<Formulario client:visible clave={clave} whatsapp={whatsapp} email={email} instagram={instagram} vimeo={vimeo} variante="fila" />
+
+		<div class="contacto-inicio__tarjeta">
+			<Formulario
+				client:visible
+				clave={clave}
+				whatsapp={whatsapp}
+				email={email}
+				instagram={instagram}
+				vimeo={vimeo}
+				variante="fila"
+			/>
 		</div>
 	</div>
 </section>
 
 <style>
 	.contacto-inicio {
-		margin-top: var(--bloque);
-		padding-block: 0 3.5rem;
+		padding-block: var(--seccion);
+		background-color: var(--marfil);
+		background-image: var(--textura-pigmento);
+		background-size: 720px 720px;
+		background-blend-mode: soft-light;
 	}
 
-	.contacto-inicio :global(.contacto-inicio__linea) {
-		margin-bottom: 3rem;
-	}
-
-	.contacto-inicio__fila {
+	.contacto-inicio__grilla {
 		display: grid;
-		gap: 1.75rem;
+		gap: 2.5rem;
+	}
+
+	.contacto-inicio__titulo {
+		margin-top: 1.25rem;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2.25rem, 1.6rem + 2.2vw, 3.5rem);
+		line-height: 1.05;
+		color: var(--azul-profundo);
+		text-wrap: balance;
 	}
 
 	.contacto-inicio__texto {
-		max-width: 20rem;
-		margin-top: 0.9rem;
+		max-width: 24rem;
+		margin-top: 1rem;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.65;
+		color: color-mix(in srgb, var(--tinta) 82%, transparent);
+	}
+
+	/* Contactos directos: etiqueta chica y el dato debajo. */
+	.contacto-inicio__directo {
+		display: grid;
+		gap: 1.1rem;
+		margin: 2rem 0 0;
+		padding: 1.5rem 0 0;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+		list-style: none;
+	}
+
+	.contacto-inicio__directo li {
+		display: grid;
+		gap: 0.25rem;
+	}
+
+	.contacto-inicio__etiqueta {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro, var(--dorado));
+	}
+
+	.contacto-inicio__directo a {
+		width: fit-content;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--tinta);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+		background-image: linear-gradient(var(--dorado), var(--dorado));
+		background-size: 0 1px;
+		background-position: 0 100%;
+		background-repeat: no-repeat;
+		transition: background-size 0.4s var(--ease);
+	}
+
+	.contacto-inicio__directo a:hover,
+	.contacto-inicio__directo a:focus-visible {
+		background-size: 100% 1px;
+	}
+
+	/* Tarjeta clara del formulario. */
+	.contacto-inicio__tarjeta {
+		padding: 1.75rem 1.25rem;
+		background-color: var(--blanco-calido);
+		box-shadow: 0 30px 60px -40px rgb(18 57 79 / 0.35);
+	}
+
+	@media (min-width: 48rem) {
+		.contacto-inicio__tarjeta {
+			padding: 2.5rem;
+		}
 	}
 
 	@media (min-width: 64rem) {
-		.contacto-inicio {
-			padding-block: 0 4rem;
-		}
-
-		.contacto-inicio__fila {
-			grid-template-columns: minmax(16rem, 28fr) 72fr;
+		.contacto-inicio__grilla {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 			align-items: center;
-			gap: 0;
+			gap: clamp(3rem, 7vw, 7rem);
 		}
 
-		.contacto-inicio__form {
-			padding-left: 3rem;
-			border-left: 1px solid var(--dorado);
+		.contacto-inicio__tarjeta {
+			padding: clamp(2.5rem, 3.5vw, 3.25rem);
 		}
 	}
 </style>

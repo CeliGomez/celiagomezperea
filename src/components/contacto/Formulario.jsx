@@ -9,7 +9,7 @@ function esEmail(valor) {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)
 }
 
-// variante "fila": versión compacta del Inicio (nombre y email en una fila, mensaje debajo y el botón al costado).
+// variante "fila": versión del Inicio (nombre y email en una fila, mensaje debajo y el botón abajo a la derecha).
 export default function Formulario({ clave = '', whatsapp = '', email: emailContacto = '', instagram = '', vimeo = '', variante = '' }) {
 	const fila = variante === 'fila'
 	const prefijo = fila ? 'inicio' : 'contacto'
@@ -164,7 +164,7 @@ export default function Formulario({ clave = '', whatsapp = '', email: emailCont
 				<textarea
 					id={`${prefijo}-mensaje`}
 					name="mensaje"
-					rows={fila ? 2 : 6}
+					rows={fila ? 4 : 6}
 					value={mensaje}
 					aria-invalid={errores.mensaje ? 'true' : undefined}
 					aria-describedby={errores.mensaje ? `${prefijo}-mensaje-error` : undefined}

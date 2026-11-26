@@ -2137,10 +2137,10 @@
   }
 }
 
-/* ——— Formulario en fila (Inicio): nombre y email arriba, mensaje debajo y el botón al costado ——— */
+/* ——— Formulario del Inicio: nombre y email en fila, mensaje debajo y el botón abajo a la derecha ——— */
 .formulario--fila {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .formulario--fila .campo + .campo {
@@ -2149,29 +2149,35 @@
 
 .formulario--fila .campo label {
   font-family: var(--font-ui);
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--tinta) 70%, transparent);
 }
 
+/* Campos con línea abajo, sin caja: más livianos sobre la tarjeta clara. */
 .formulario--fila .campo input,
 .formulario--fila .campo textarea {
-  border-color: #cfc2b4;
-  background-color: var(--blanco-calido);
+  padding: 0.7rem 0.1rem;
+  border: 0;
+  border-bottom: 1px solid #cfc2b4;
+  background-color: transparent;
+  font-size: 1rem;
+  transition: border-color 0.3s var(--ease);
 }
 
 .formulario--fila .campo input:focus,
 .formulario--fila .campo textarea:focus {
-  border-color: var(--azul-medio);
-  box-shadow: 0 0 0 1px var(--azul-medio);
+  border-bottom-color: var(--azul-profundo);
+  box-shadow: 0 1px 0 0 var(--azul-profundo);
 }
 
 .formulario--fila .campo textarea {
-  min-height: 5.5rem;
+  min-height: 7rem;
 }
 
 .formulario--fila .formulario__enviar {
   justify-self: stretch;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
 }
 
 .formulario--fila .formulario__aviso {
@@ -2180,28 +2186,21 @@
 
 @media (min-width: 48rem) {
   .formulario--fila {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    column-gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 2rem;
+    row-gap: 1.75rem;
     align-items: start;
   }
 
-  .formulario--fila .campo:has(textarea) {
-    grid-column: 1 / 3;
-  }
-
-  .formulario--fila .formulario__enviar {
-    grid-column: 3;
-    grid-row: 2;
-    align-self: end;
-    min-width: 9.5rem;
-    margin-top: 0;
-  }
-
+  .formulario--fila .campo:has(textarea),
   .formulario--fila .formulario__aviso {
     grid-column: 1 / -1;
   }
 
-  .formulario--fila .campo textarea {
-    min-height: 3.75rem;
+  .formulario--fila .formulario__enviar {
+    grid-column: 1 / -1;
+    justify-self: end;
+    min-width: 11rem;
+    margin-top: 0;
   }
 }
