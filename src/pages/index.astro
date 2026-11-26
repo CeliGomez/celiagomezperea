@@ -5,12 +5,11 @@ import CuadrosDestacados from '../components/home/CuadrosDestacados.astro'
 import SeccionesInicio from '../components/home/SeccionesInicio.astro'
 import SobreArtista from '../components/home/SobreArtista.astro'
 import ContactoInicio from '../components/home/ContactoInicio.astro'
-import Fragmento from '../components/home/Fragmento.astro'
 import {
 	fetchDiapositivasHero,
-	fetchFragmentos,
 	fetchFraseInicio,
 	fetchHeroInicio,
+	fetchFragmentos,
 	fetchInicio,
 	fetchSeccionesInicio,
 	fetchCuadrosDestacados,
@@ -69,10 +68,8 @@ const datos = nombre
 		datos={artista?.datosInicio || []}
 		nombre={nombre}
 	/>
-	<Fragmento fragmento={fragmentos['inicio-1']} pegado />
-	<CuadrosDestacados cuadros={cuadros} />
+	<CuadrosDestacados cuadros={cuadros} fondo={fragmentos['inicio-1']} />
 	<SeccionesInicio secciones={secciones} />
-	<Fragmento fragmento={fragmentos['inicio-2']} ocultarEnMovil />
 	<ContactoInicio
 		clave={clave}
 		whatsapp={configuracion?.whatsapp}

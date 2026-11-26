@@ -1,48 +1,86 @@
 ---
 import { urlFor } from '../../lib/sanity.js'
+import { rutas } from '../../lib/rutas.js'
 
-const { cuadros = [] } = Astro.props
+/*
+	«Obra seleccionada»: tira de cuadros del Inicio.
+	- Los cuadros salen de Sanity: los que tienen «Destacar en el inicio» prendido (hasta 10).
+	  Si no hay ninguno marcado, se muestra el primer cuadro de cada obra.
+	- Fondo: el detalle de un cuadro (fragmento «inicio-1»), muy suave, detrás de la parte de arriba
+	  de la tira, como la pared donde cuelgan las obras. Se apaga hacia abajo.
+	- Todos los cuadros tienen la misma altura y una sombra suave, como colgados en una misma línea.
+	- En celular: se desliza con el dedo y «Ver todos los cuadros» pasa a un botón debajo.
+*/
+const { cuadros = [], fondo = null } = Astro.props
+const fondoSrc = fondo?.imagen ? urlFor(fondo.imagen).width(1800).url() : ''
 ---
 
-<section class="cuadros-destacados" aria-labelledby="cuadros-destacados-titulo" data-cuadros-destacados>
-  <div class="cuadros-destacados__contenedor">
-    <header class="cuadros-destacados__encabezado">
-      <h2 id="cuadros-destacados-titulo">Obra seleccionada</h2>
-      <div class="cuadros-destacados__acciones">
-        <a class="cuadros-destacados__todos" href="/series">Ver todos los cuadros <span aria-hidden="true">→</span></a>
-        <div class="cuadros-destacados__flechas">
-          <button type="button" aria-label="Cuadros anteriores" data-cuadros-anterior disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
-          </button>
-          <button type="button" aria-label="Cuadros siguientes" data-cuadros-siguiente disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
-          </button>
-        </div>
-      </div>
-    </header>
+{
+	cuadros.length > 0 && (
+		<section class="cuadros-destacados" aria-labelledby="cuadros-destacados-titulo" data-cuadros-destacados>
+			{fondoSrc && (
+				<div class="cuadros-destacados__fondo" aria-hidden="true">
+					<img src={fondoSrc} alt="" loading="lazy" decoding="async" />
+				</div>
+			)}
+			<div class="cuadros-destacados__contenedor">
+				<header class="cuadros-destacados__encabezado">
+					<div class="encabezado-seccion">
+						<h2 id="cuadros-destacados-titulo" class="t-seccion">
+							Obra seleccionada
+						</h2>
+						<span class="filete filete--largo" aria-hidden="true" />
+					</div>
+					<div class="cuadros-destacados__acciones">
+						<a class="cuadros-destacados__todos" href={rutas.cuadros}>
+							Ver todos los cuadros <span aria-hidden="true">→</span>
+						</a>
+						<div class="cuadros-destacados__flechas">
+							<button type="button" aria-label="Cuadros anteriores" data-cuadros-anterior disabled>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M15 5 8 12l7 7" />
+								</svg>
+							</button>
+							<button type="button" aria-label="Cuadros siguientes" data-cuadros-siguiente disabled>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path d="m9 5 7 7-7 7" />
+								</svg>
+							</button>
+						</div>
+					</div>
+				</header>
 
-    <div class="cuadros-destacados__tira" data-cuadros-tira>
-      {cuadros.map((cuadro) => (
-        <a class="cuadros-destacados__tarjeta" href={cuadro.href}>
-          <img
-            src={urlFor(cuadro.imagen).width(1600).url()}
-            alt={cuadro.imagen?.alt || cuadro.titulo}
-            width={cuadro.relacion?.ancho}
-            height={cuadro.relacion?.alto}
-            loading="lazy"
-            decoding="async"
-          />
-          <span class="cuadros-destacados__pie">
-            <span class="cuadros-destacados__titulo">{cuadro.titulo}</span>
-            <span class="cuadros-destacados__datos">
-              {[cuadro.obra, cuadro.dimensiones].filter(Boolean).join(' · ')}
-            </span>
-          </span>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
+				<div class="cuadros-destacados__tira" data-cuadros-tira>
+					{cuadros.map((cuadro) => (
+						<a class="cuadros-destacados__tarjeta" href={cuadro.href}>
+							<span class="cuadros-destacados__cuadro">
+								<img
+									src={urlFor(cuadro.imagen).width(1200).url()}
+									alt={cuadro.imagen?.alt || cuadro.titulo}
+									width={cuadro.relacion?.ancho}
+									height={cuadro.relacion?.alto}
+									loading="lazy"
+									decoding="async"
+								/>
+							</span>
+							<span class="cuadros-destacados__pie">
+								<span class="cuadros-destacados__titulo">{cuadro.titulo}</span>
+								<span class="cuadros-destacados__datos">
+									{[cuadro.obra, cuadro.anio, cuadro.dimensiones].filter(Boolean).join(' · ')}
+								</span>
+							</span>
+						</a>
+					))}
+				</div>
+
+				<a class="btn btn-contorno cuadros-destacados__boton-movil" href={rutas.cuadros}>
+					Ver todos los cuadros
+					<span aria-hidden="true">→</span>
+				</a>
+			</div>
+		</section>
+	)
+}
 
 <script>
   const iniciarTiras = () => {
@@ -79,205 +117,253 @@ const { cuadros = [] } = Astro.props
 </script>
 
 <style>
-  .cuadros-destacados {
-    overflow: hidden;
-    background: var(--blanco-calido);
-    padding-block: var(--bloque);
-  }
+	.cuadros-destacados {
+		position: relative;
+		overflow: hidden;
+		padding-block: var(--bloque);
+		background-color: var(--marfil);
+		isolation: isolate;
+	}
 
-  .cuadros-destacados__contenedor {
-    max-width: var(--ancho-max);
-    margin-inline: auto;
-    padding-inline: var(--gutter);
-  }
+	/* Detalle de un cuadro como «pared», muy suave, que se apaga hacia abajo. */
+	.cuadros-destacados__fondo {
+		position: absolute;
+		inset: 0 0 auto;
+		z-index: -1;
+		height: 70%;
+		-webkit-mask-image: linear-gradient(180deg, black 0%, black 45%, transparent 100%);
+		mask-image: linear-gradient(180deg, black 0%, black 45%, transparent 100%);
+		pointer-events: none;
+	}
 
-  .cuadros-destacados__encabezado,
-  .cuadros-destacados__acciones,
-  .cuadros-destacados__flechas {
-    display: flex;
-    align-items: center;
-  }
+	.cuadros-destacados__fondo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0.16;
+		filter: grayscale(0.35);
+		mix-blend-mode: multiply;
+	}
 
-  .cuadros-destacados__encabezado {
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
+	.cuadros-destacados__contenedor {
+		max-width: var(--ancho-max);
+		margin-inline: auto;
+		padding-inline: var(--gutter);
+	}
 
-  .cuadros-destacados__encabezado h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0;
-    color: var(--tinta);
-    font-family: var(--font-ui);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    line-height: 1.4;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
+	.cuadros-destacados__encabezado,
+	.cuadros-destacados__acciones,
+	.cuadros-destacados__flechas {
+		display: flex;
+		align-items: center;
+	}
 
-  .cuadros-destacados__encabezado h2::after {
-    width: 2.5rem;
-    height: 1px;
-    background: var(--dorado);
-    content: '';
-  }
+	.cuadros-destacados__encabezado {
+		justify-content: space-between;
+		gap: 1.5rem;
+		margin-bottom: clamp(2rem, 4vw, 3rem);
+	}
 
-  .cuadros-destacados__acciones {
-    gap: 1.25rem;
-  }
+	.cuadros-destacados__acciones {
+		gap: 1.25rem;
+	}
 
-  .cuadros-destacados__todos {
-    color: var(--azul-medio);
-    font-family: var(--font-ui);
-    font-size: 0.875rem;
-    text-decoration: none;
-    transition: color 180ms var(--ease);
-  }
+	.cuadros-destacados__todos {
+		color: var(--azul-profundo);
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-decoration: none;
+		transition: color 180ms var(--ease);
+	}
 
-  .cuadros-destacados__todos:hover {
-    color: var(--azul-profundo);
-  }
+	.cuadros-destacados__todos:hover,
+	.cuadros-destacados__todos:focus-visible {
+		color: var(--dorado);
+	}
 
-  .cuadros-destacados__flechas {
-    gap: 0.5rem;
-  }
+	.cuadros-destacados__flechas {
+		gap: 0.5rem;
+	}
 
-  .cuadros-destacados__flechas button {
-    display: grid;
-    width: 2.5rem;
-    height: 2.5rem;
-    place-items: center;
-    padding: 0;
-    border: 1px solid var(--tinta);
-    background: transparent;
-    color: var(--tinta);
-    cursor: pointer;
-    transition: opacity 180ms var(--ease);
-  }
+	.cuadros-destacados__flechas button {
+		display: grid;
+		width: 2.75rem;
+		height: 2.75rem;
+		place-items: center;
+		padding: 0;
+		border: 1px solid color-mix(in srgb, var(--tinta) 35%, transparent);
+		background: transparent;
+		color: var(--tinta);
+		cursor: pointer;
+		transition:
+			opacity 180ms var(--ease),
+			border-color 180ms var(--ease),
+			color 180ms var(--ease);
+	}
 
-  .cuadros-destacados__flechas button:disabled {
-    cursor: default;
-    opacity: 0.35;
-  }
+	.cuadros-destacados__flechas button:not(:disabled):hover,
+	.cuadros-destacados__flechas button:focus-visible {
+		border-color: var(--dorado);
+		color: var(--dorado);
+	}
 
-  .cuadros-destacados__flechas svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.5;
-  }
+	.cuadros-destacados__flechas button:disabled {
+		cursor: default;
+		opacity: 0.3;
+	}
 
-  .cuadros-destacados__tira {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
+	.cuadros-destacados__flechas svg {
+		width: 1.25rem;
+		height: 1.25rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-width: 1.5;
+	}
 
-  .cuadros-destacados__tira::-webkit-scrollbar {
-    display: none;
-  }
+	/* ——— Tira ——— */
+	.cuadros-destacados__tira {
+		--alto-cuadro: clamp(19rem, 30vw, 28rem);
+		display: flex;
+		align-items: flex-start;
+		gap: clamp(2rem, 4vw, 4rem);
+		/* Aire para que la sombra de los cuadros no se corte. */
+		padding-block: 0.5rem 1.5rem;
+		overflow-x: auto;
+		overscroll-behavior-inline: contain;
+		scroll-behavior: smooth;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+	}
 
-  .cuadros-destacados__tarjeta {
-    display: flex;
-    flex: 0 0 auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    color: inherit;
-    scroll-snap-align: start;
-    text-decoration: none;
-  }
+	.cuadros-destacados__tira::-webkit-scrollbar {
+		display: none;
+	}
 
-  .cuadros-destacados__tarjeta img {
-    display: block;
-    width: auto;
-    max-width: none;
-    height: 420px;
-    object-fit: contain;
-    transition: filter 220ms var(--ease);
-  }
+	.cuadros-destacados__tarjeta {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		gap: 1.25rem;
+		max-width: min(85vw, 40rem);
+		color: inherit;
+		scroll-snap-align: start;
+		text-decoration: none;
+	}
 
-  .cuadros-destacados__tarjeta:hover img {
-    filter: brightness(1.04);
-  }
+	/* Todos a la misma altura, apoyados sobre una misma línea. */
+	.cuadros-destacados__cuadro {
+		display: flex;
+		align-items: flex-end;
+		height: var(--alto-cuadro);
+	}
 
-  .cuadros-destacados__pie {
-    display: grid;
-    gap: 0.2rem;
-    max-width: 100%;
-  }
+	.cuadros-destacados__cuadro img {
+		display: block;
+		width: auto;
+		max-width: 100%;
+		height: 100%;
+		object-fit: contain;
+		object-position: left bottom;
+		filter: drop-shadow(0 18px 22px rgb(25 25 25 / 0.18));
+		transition:
+			transform 400ms var(--ease),
+			filter 400ms var(--ease);
+	}
 
-  .cuadros-destacados__titulo {
-    overflow: hidden;
-    color: var(--tinta);
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-style: italic;
-    line-height: 1.1;
-    text-overflow: ellipsis;
-    transition: color 220ms var(--ease);
-    white-space: nowrap;
-  }
+	.cuadros-destacados__tarjeta:hover img,
+	.cuadros-destacados__tarjeta:focus-visible img {
+		transform: translateY(-4px);
+		filter: drop-shadow(0 24px 28px rgb(25 25 25 / 0.22));
+	}
 
-  .cuadros-destacados__tarjeta:hover .cuadros-destacados__titulo {
-    color: var(--azul-medio);
-  }
+	.cuadros-destacados__pie {
+		display: grid;
+		gap: 0.3rem;
+		max-width: 100%;
+		padding-top: 0.9rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
 
-  .cuadros-destacados__datos {
-    overflow: hidden;
-    color: var(--gris);
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    line-height: 1.4;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+	.cuadros-destacados__titulo {
+		overflow: hidden;
+		color: var(--tinta);
+		font-family: var(--font-display);
+		font-size: 1.375rem;
+		font-style: italic;
+		line-height: 1.15;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		transition: color 220ms var(--ease);
+	}
 
-  @media (max-width: 47.99rem) {
-    .cuadros-destacados__encabezado {
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
+	.cuadros-destacados__tarjeta:hover .cuadros-destacados__titulo,
+	.cuadros-destacados__tarjeta:focus-visible .cuadros-destacados__titulo {
+		color: var(--azul-medio);
+	}
 
-    .cuadros-destacados__acciones {
-      gap: 0;
-    }
+	.cuadros-destacados__datos {
+		overflow: hidden;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.14em;
+		line-height: 1.4;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
 
-    .cuadros-destacados__flechas {
-      display: none;
-    }
+	.cuadros-destacados__tarjeta:focus-visible {
+		outline: 1px solid var(--dorado);
+		outline-offset: 6px;
+	}
 
-    .cuadros-destacados__todos {
-      font-size: 0.75rem;
-      white-space: nowrap;
-    }
+	.cuadros-destacados__boton-movil {
+		display: none;
+	}
 
-    .cuadros-destacados__tira {
-      margin-right: calc(-1 * var(--gutter));
-      padding-right: var(--gutter);
-      gap: 1.5rem;
-    }
+	/* ——— Celular ——— */
+	@media (max-width: 47.99rem) {
+		.cuadros-destacados__fondo {
+			height: 60%;
+		}
 
-    .cuadros-destacados__tarjeta img {
-      height: 300px;
-    }
-  }
+		.cuadros-destacados__acciones {
+			display: none;
+		}
 
-  @media (prefers-reduced-motion: reduce) {
-    .cuadros-destacados__tira {
-      scroll-behavior: auto;
-    }
-  }
+		.cuadros-destacados__tira {
+			--alto-cuadro: 20rem;
+			gap: 1.75rem;
+			margin-right: calc(-1 * var(--gutter));
+			padding-right: var(--gutter);
+		}
+
+		.cuadros-destacados__titulo {
+			font-size: 1.25rem;
+		}
+
+		.cuadros-destacados__boton-movil {
+			display: inline-flex;
+			justify-content: center;
+			width: 100%;
+			margin-top: 1.5rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cuadros-destacados__tira {
+			scroll-behavior: auto;
+		}
+
+		.cuadros-destacados__cuadro img {
+			transition: none;
+		}
+	}
 </style>

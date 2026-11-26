@@ -1261,7 +1261,8 @@ export async function fetchSeries({disciplina = '', excluirDisciplina = ''} = {}
       | order(coalesce(orden, 999999) asc) ${proyeccionSerie}`,
     {disciplina, excluir: excluirDisciplina},
   )
-  return (series || []).map((serie) => prepararSerie(serie))
+  // Una obra sin cuadros ni ilustraciones publicadas todavía no se muestra.
+  return (series || []).map((serie) => prepararSerie(serie)).filter((serie) => serie.cantidadObras > 0)
 }
 
 export async function fetchSerie(slug) {
@@ -1283,7 +1284,8 @@ export async function fetchSerie(slug) {
   const serie = await client.fetch(`*[_type == "serie" && slug.current == $slug && ${VISIBLE}][0] ${proyeccionSerie}`, {slug})
   if (!serie) return null
   const papel = serie.disciplina?.slug === PAPEL
-  const mismoTipo = `(coalesce(disciplina->slug.current, "") == "${PAPEL}") == $papel`
+  const mismoTipo = `(coalesce(disciplina->slug.current, "") == "${PAPEL}") == $papel
+    && count(*[_type == "obra" && serie._ref == ^._id && ${VISIBLE}]) > 0`
   const [obras, anterior, siguiente] = await Promise.all([
     client.fetch(
       `*[_type == "obra" && serie->slug.current == $slug && ${VISIBLE}] | order(coalesce(ordenEnSerie, 999999) asc) ${proyeccionObraLista}`,
@@ -1427,7 +1429,7 @@ export async function fetchCuadrosDestacados() {
 
   const marcadas = await client.fetch(
     `*[_type == "obra" && destacadaEnInicio == true && defined(slug.current) && defined(imagenPrincipal.asset) && ${VISIBLE}]
-      | order(_createdAt asc)[0...10] {
+      | order(coalesce(ordenInicio, 999999) asc, _createdAt asc)[0...10] {
         titulo,
         "slug": slug.current,
         anio,

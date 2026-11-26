@@ -214,6 +214,15 @@ export const obra = defineType({
       ),
     }),
     defineField({
+      name: 'ordenInicio',
+      title: 'Lugar en el inicio',
+      type: 'number',
+      description:
+        'El 1 aparece primero, después el 2, el 3… Así podés intercalar: 1 un cuadro, 2 una ilustración, 3 un cuadro. Si lo dejás vacío, va al final.',
+      hidden: ({parent}) => !parent?.destacadaEnInicio,
+      validation: (rule) => rule.integer().min(1).error('Usá un número entero, por ejemplo 1.'),
+    }),
+    defineField({
       name: 'ordenGaleria',
       hidden: true,
       title: 'Orden en galería',
@@ -242,11 +251,14 @@ export const obra = defineType({
       estado: 'estado',
       publicada: 'publicada',
       orden: 'ordenEnSerie',
+      destacada: 'destacadaEnInicio',
+      ordenInicio: 'ordenInicio',
     },
-    prepare({title, media, estado, publicada, orden}) {
+    prepare({title, media, estado, publicada, orden, destacada, ordenInicio}) {
       const partes = [
         Number.isFinite(orden) ? `N.º ${orden}` : '',
         publicada === false ? 'Oculta' : 'Visible',
+        destacada ? (Number.isFinite(ordenInicio) ? `En el inicio: ${ordenInicio}` : 'En el inicio') : '',
         estado && estado !== 'sin-especificar' ? estados[estado] : '',
       ].filter(Boolean)
       return {
