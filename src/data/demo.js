@@ -302,18 +302,7 @@ export const fragmentos = [
 // orden define la secuencia; activa: false la saca sin borrarla. epigrafe: solo con datos confirmados.
 // Los videos: MP4 sin audio en public/demo/hero/, con su póster (primer fotograma) como imagen.
 export const diapositivasHero = [
-	{
-		_id: 'hero-celia-03',
-		_type: 'diapositivaHero',
-		tipo: 'imagen',
-		orden: 10,
-		activa: true,
-		epigrafe: '',
-		imagen: {
-			...foto('hero/hero-celia-03-desktop.webp', 1672, 941, 'Celia Gómez Perea sentada en el piso del taller, junto a su caja de materiales.'),
-			hotspot: { x: 0.62, y: 0.45, width: 1, height: 1 },
-		},
-	},
+	// La foto hero-celia-03 (sentada junto a la caja naranja, fondo blanco) se sacó a pedido de Celia.
 	{
 		_id: 'hero-celia-taller-cuaderno',
 		_type: 'diapositivaHero',
@@ -375,18 +364,8 @@ export const diapositivasHero = [
 			hotspot: { x: 0.45, y: 0.35, width: 1, height: 1 },
 		},
 	},
-	{
-		_id: 'hero-celia-taller-retrato',
-		_type: 'diapositivaHero',
-		tipo: 'imagen',
-		orden: 50,
-		activa: true,
-		epigrafe: '',
-		imagen: {
-			...foto('hero/hero-celia-taller-retrato.webp', 960, 1088, 'Celia Gómez Perea sentada en una silla turquesa en su taller, entre dos cuadros de gran formato, frente a una pared violeta.'),
-			hotspot: { x: 0.5, y: 0.35, width: 1, height: 1 },
-		},
-	},
+	// La foto en la silla turquesa ahora es la de «Sobre la artista» (artista.retratoInicio):
+	// se sacó del carrusel para que no se repita una debajo de la otra.
 ]
 
 // Instalación confirmada. No se le asignan cuadros: no está confirmado cuáles la integran.
@@ -471,6 +450,23 @@ export const artista = {
 		),
 		hotspot: { x: 0.5, y: 0.42, width: 1, height: 1 },
 	},
+	// Foto de la sección «Sobre la artista» del Inicio (va justo después del hero).
+	// La página La artista sigue usando «retrato».
+	retratoInicio: {
+		...foto(
+			'celia-taller-caja.webp',
+			960,
+			1280,
+			'Celia Gómez Perea en su taller, sentada en el piso junto a una caja de herramientas naranja, con dos cuadros de gran formato detrás.',
+		),
+		hotspot: { x: 0.6, y: 0.5, width: 1, height: 1 },
+	},
+	// Datos breves del CV que se muestran en «Sobre la artista» del Inicio.
+	datosInicio: [
+		{ titulo: 'Trayectoria', texto: 'Más de veinte años de obra' },
+		{ titulo: 'Formación', texto: 'Licenciada en Artes Plásticas, UNLP' },
+		{ titulo: 'Docencia', texto: 'ISFDA N.° 805, Trelew y Puerto Madryn' },
+	],
 	// También es la imagen del bloque Audiovisual del Inicio mientras no haya videos cargados.
 	fotoTaller: {
 		...foto(
@@ -564,8 +560,16 @@ export const seccionesInicio = [
 		textoBoton: 'Ver más',
 		// Cambiar cuando exista la página o el Instagram de Estación Nómade
 		enlace: '/contacto',
-		// Sin foto real de un taller de Celia: la fila muestra un fondo con textura y el nombre.
-		imagen: null,
+		// Ilustración de Celia que representa a la Estación Nómade (versión apaisada para la fila).
+		imagen: {
+			...foto(
+				'portadas/portada-estacion-nomade.webp',
+				1800,
+				760,
+				'Ilustración de Celia Gómez Perea para la Estación Nómade: un paisaje de línea negra con árboles, raíces y pájaros sobre un óvalo de luz naranja.',
+			),
+			hotspot: { x: 0.5, y: 0.5, width: 1, height: 1 },
+		},
 		tono: 'marfil',
 		usarMiniaturaVideo: false,
 	},

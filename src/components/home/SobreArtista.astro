@@ -3,36 +3,67 @@ import Imagen from './Imagen.astro'
 import Flecha from '../layout/Flecha.astro'
 import { rutas } from '../../lib/rutas.js'
 
-// Foto auténtica de la artista fundida con el fondo y la bio corta (docs/contenido-sobre-la-artista.md).
-const { retrato = null, bio = '', nombre = '' } = Astro.props
+/*
+	«Sobre la artista»: va justo después del hero, para presentar a Celia de entrada.
+	- Foto grande enmarcada, con un filete dorado corrido detrás (como un paspartú) y un epígrafe.
+	- Al lado: una frase de su statement, la bio corta y tres datos del CV.
+	- En celular: foto arriba y todo el texto debajo. En escritorio: foto a la izquierda, texto a la derecha.
+	Textos: src/data/sobre.js (frase) y src/data/demo.js (bioCorta, datosInicio, retratoInicio).
+*/
+const { retrato = null, bio = '', cita = '', datos = [], nombre = '' } = Astro.props
 ---
 
 {
 	(bio || retrato) && (
-		<section class="artista ctx-claro" aria-labelledby="artista-titulo">
-			<div class="artista__foto">
-				<Imagen
-					source={retrato}
-					alt={retrato?.alt || nombre}
-					titulo={nombre}
-					width={900}
-					height={1200}
-					marco="portada"
-					proporcion="vertical"
-					sizes="(min-width: 64rem) 38vw, 100vw"
-				/>
-			</div>
-			<div class="artista__texto contenedor fade-in">
-				<div class="artista__columna">
+		<section class:list={['artista', !retrato && 'artista--sin-foto']} aria-labelledby="artista-titulo">
+			<div class="artista__grilla contenedor">
+				{retrato && (
+					<figure class="artista__foto fade-in">
+						<div class="artista__marco">
+							<Imagen
+								source={retrato}
+								alt={retrato?.alt || nombre}
+								titulo={nombre}
+								width={880}
+								height={1100}
+								marco="portada"
+								proporcion="vertical"
+								sizes="(min-width: 64rem) 42vw, 100vw"
+							/>
+						</div>
+						<figcaption class="artista__epigrafe">En el taller</figcaption>
+					</figure>
+				)}
+
+				<div class="artista__texto fade-in">
 					<div class="encabezado-seccion">
 						<h2 id="artista-titulo" class="t-seccion">
 							Sobre la artista
 						</h2>
 						<span class="filete filete--largo" aria-hidden="true" />
 					</div>
-					{bio && <p class="t-texto artista__bio">{bio}</p>}
+
+					{cita && (
+						<blockquote class="artista__cita">
+							<p>{cita}</p>
+						</blockquote>
+					)}
+
+					{bio && <p class="artista__bio">{bio}</p>}
+
+					{datos.length > 0 && (
+						<dl class="artista__datos">
+							{datos.map((dato) => (
+								<div class="artista__dato">
+									<dt>{dato.titulo}</dt>
+									<dd>{dato.texto}</dd>
+								</div>
+							))}
+						</dl>
+					)}
+
 					<a class="btn btn-contorno artista__boton" href={rutas.sobreMi}>
-						Conocer más
+						Conocer su trayectoria
 						<Flecha />
 					</a>
 				</div>
@@ -44,85 +75,171 @@ const { retrato = null, bio = '', nombre = '' } = Astro.props
 <style>
 	.artista {
 		position: relative;
-		display: grid;
-		margin-top: var(--bloque);
+		padding-block: var(--seccion);
+		background-color: var(--blanco-calido);
 		overflow: hidden;
+		isolation: isolate;
 	}
 
+	/* Una mancha de pigmento muy suave detrás de la foto: le da aire de taller sin ensuciar. */
+	.artista::before {
+		content: '';
+		position: absolute;
+		inset: 0 auto 0 0;
+		z-index: -1;
+		width: min(30%, 34rem);
+		background-color: var(--marfil);
+		background-image: var(--textura-pigmento);
+		background-size: 720px 720px;
+		background-blend-mode: soft-light;
+		opacity: 0.85;
+	}
+
+	.artista__grilla {
+		display: grid;
+		gap: 3rem;
+	}
+
+	/* ——— Foto ——— */
 	.artista__foto {
 		position: relative;
-		aspect-ratio: 3 / 4;
-		max-height: 32rem;
-		-webkit-mask-image: var(--mascara-abajo);
-		mask-image: var(--mascara-abajo);
-		-webkit-mask-size: 100% 100%;
-		mask-size: 100% 100%;
+		width: calc(100% - 1rem);
+		max-width: 36rem;
+		margin: 0;
 	}
 
-	/* En celulares la foto va a todo el ancho (con 3:4 y alto máximo quedaba más angosta que la pantalla). */
-	@media (max-width: 47.99rem) {
-		.artista__foto {
-			aspect-ratio: 4 / 5;
-			max-height: none;
-		}
+	.artista__marco {
+		position: relative;
+		isolation: isolate;
 	}
 
-	.artista__foto:has(:global(.is-vacia)) {
-		-webkit-mask-image: none;
-		mask-image: none;
-	}
-
-	.artista__foto :global(.marco) {
+	/* Filete dorado corrido hacia abajo y a la derecha. */
+	.artista__marco::before {
+		content: '';
 		position: absolute;
 		inset: 0;
-		background-color: transparent;
+		z-index: -1;
+		border: 1px solid var(--dorado);
+		transform: translate(1rem, 1rem);
+		pointer-events: none;
 	}
 
-	.artista__texto {
-		padding-block: 2rem 3.25rem;
+	.artista__marco :global(.marco) {
+		display: block;
+		width: 100%;
+		max-width: none;
+		box-shadow: 0 30px 60px -35px rgb(18 57 79 / 0.45);
+	}
+
+	.artista__marco :global(img) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.artista__epigrafe {
+		margin-top: 1.75rem;
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 55%, transparent);
+	}
+
+	/* ——— Texto ——— */
+	.artista__cita {
+		position: relative;
+		max-width: 34rem;
+		margin: 2rem 0 0;
+		padding-left: 1.5rem;
+		border-left: 1px solid var(--dorado);
+	}
+
+	.artista__cita p {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
+		font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
+		line-height: 1.2;
+		color: var(--azul-profundo);
+		text-wrap: balance;
 	}
 
 	.artista__bio {
 		max-width: 34rem;
-		margin-top: 1.35rem;
+		margin-top: 1.75rem;
+		font-family: var(--font-body);
+		font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.175rem);
+		line-height: 1.75;
+		color: color-mix(in srgb, var(--tinta) 86%, transparent);
+	}
+
+	.artista__datos {
+		display: grid;
+		gap: 1.25rem;
+		max-width: 38rem;
+		margin: 2.25rem 0 0;
+	}
+
+	.artista__dato {
+		padding-top: 1rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 15%, transparent);
+	}
+
+	.artista__dato dt {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado);
+	}
+
+	.artista__dato dd {
+		margin: 0.4rem 0 0;
+		font-family: var(--font-body);
+		font-size: 0.975rem;
+		line-height: 1.5;
+		color: var(--tinta);
 	}
 
 	.artista__boton {
-		margin-top: 1.75rem;
+		margin-top: 2.5rem;
 	}
 
-	/* Escritorio: la foto en el 46 % izquierdo, a sangre, fundida hacia la derecha. */
+	/* ——— Tablet: los tres datos en fila ——— */
+	@media (min-width: 40rem) {
+		.artista__datos {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 1.5rem;
+		}
+	}
+
+	/* ——— Celular: la mancha de pigmento ocupa solo el fondo de la foto ——— */
+	@media (max-width: 63.99rem) {
+		.artista::before {
+			inset: 0 0 auto 0;
+			width: 100%;
+			height: min(45%, 26rem);
+		}
+	}
+
+	/* ——— Escritorio: foto a la izquierda, texto a la derecha ——— */
 	@media (min-width: 64rem) {
-		.artista {
-			grid-template-columns: minmax(18rem, 36%) minmax(0, 1fr);
-			align-items: stretch;
+		.artista__grilla {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+			align-items: center;
+			gap: clamp(3.5rem, 7vw, 8rem);
 		}
 
 		.artista__foto {
-			max-height: none;
-			aspect-ratio: 3 / 4;
-			-webkit-mask-image: var(--mascara-derecha);
-			mask-image: var(--mascara-derecha);
+			justify-self: end;
 		}
 
-		.artista__texto {
-			display: flex;
-			align-items: center;
-			padding-block: 4rem;
-		}
-
-		.artista__columna {
-			max-width: 36rem;
-			padding-left: clamp(1.5rem, 4vw, 4rem);
-		}
-
-		.artista--sin-foto .artista__texto {
-			grid-template-columns: 1fr;
-		}
-
-		.artista--sin-foto .artista__columna {
-			grid-column: 1;
-			padding-left: 0;
+		.artista--sin-foto .artista__grilla {
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 </style>

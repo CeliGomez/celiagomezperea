@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Hero from '../components/home/Hero.astro'
-import FraseInicio from '../components/home/FraseInicio.astro'
 import CuadrosDestacados from '../components/home/CuadrosDestacados.astro'
 import SeccionesInicio from '../components/home/SeccionesInicio.astro'
 import SobreArtista from '../components/home/SobreArtista.astro'
@@ -66,9 +65,10 @@ const datos = nombre
 	<SobreArtista
 		retrato={artista?.retratoInicio || artista?.retrato}
 		bio={artista?.bioCorta || ''}
+		cita={artista?.fraseStatement || ''}
+		datos={artista?.datosInicio || []}
 		nombre={nombre}
 	/>
-	<FraseInicio frase={frase} />
 	<Fragmento fragmento={fragmentos['inicio-1']} pegado />
 	<CuadrosDestacados cuadros={cuadros} />
 	<SeccionesInicio secciones={secciones} />
