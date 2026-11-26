@@ -1,0 +1,193 @@
+---
+/*
+	Encabezado de Cuadros e Ilustraciones: banda azul con la etiqueta, el título, la explicación
+	y las obras como fichas para elegir (llevan a cada una dentro de la página).
+	fichas: [{ href, numero, nombre, cantidad }]. Con menos de dos fichas no se muestran.
+*/
+const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '' } = Astro.props
+---
+
+<header class="encabezado-obras__encabezado ctx-azul ctx-azul--profundo textura">
+	<div class="contenedor">
+		<div class="encabezado-obras__titulos">
+			{etiqueta && <p class="encabezado-obras__etiqueta">{etiqueta}</p>}
+			<h1 class="encabezado-obras__titulo">{titulo}</h1>
+			<span class="filete filete--largo" aria-hidden="true" />
+			{bajada && <p class="encabezado-obras__bajada">{bajada}</p>}
+		</div>
+
+		{
+			fichas.length > 1 && (
+				<nav class="encabezado-obras__fichas" aria-label={`Obras de ${titulo.toLowerCase()}`}>
+					{cuantas && <p class="encabezado-obras__cuantas">{cuantas}</p>}
+					<ol>
+						{fichas.map((ficha) => (
+							<li>
+								<a href={ficha.href}>
+									<span class="encabezado-obras__ficha-numero">{ficha.numero}</span>
+									<span class="encabezado-obras__ficha-nombre">{ficha.nombre}</span>
+									{ficha.cantidad && <span class="encabezado-obras__ficha-cantidad">{ficha.cantidad}</span>}
+								</a>
+							</li>
+						))}
+					</ol>
+				</nav>
+			)
+		}
+	</div>
+</header>
+
+<style>
+	.encabezado-obras__encabezado {
+		padding-top: 7.5rem;
+		padding-bottom: clamp(3rem, 6vw, 4.5rem);
+	}
+
+	.encabezado-obras__titulos {
+		display: grid;
+		justify-items: start;
+		gap: 1rem;
+	}
+
+	.encabezado-obras__etiqueta {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado);
+	}
+
+	.encabezado-obras__titulo {
+		font-family: var(--font-display);
+		font-size: clamp(3.25rem, 2rem + 4.5vw, 6rem);
+		font-weight: 400;
+		line-height: 0.95;
+		color: var(--blanco-calido);
+	}
+
+	.encabezado-obras__bajada {
+		max-width: 40rem;
+		margin-top: 0.5rem;
+		font-family: var(--font-body);
+		font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.2rem);
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--blanco-calido) 86%, transparent);
+	}
+
+	/* Fichas de las obras: llevan a cada una dentro de la página. */
+	.encabezado-obras__fichas {
+		margin-top: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	.encabezado-obras__cuantas {
+		margin-bottom: 1rem;
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--azul-bruma);
+	}
+
+	.encabezado-obras__fichas ol {
+		display: grid;
+		gap: 0.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.encabezado-obras__fichas a {
+		display: grid;
+		gap: 0.35rem;
+		height: 100%;
+		padding: 1.1rem 1.25rem 1.25rem;
+		border: 1px solid rgb(212 161 78 / 0.35);
+		color: var(--blanco-calido);
+		text-decoration: none;
+		transition:
+			background-color 0.3s var(--ease),
+			border-color 0.3s var(--ease);
+	}
+
+	.encabezado-obras__fichas a:hover,
+	.encabezado-obras__fichas a:focus-visible {
+		border-color: var(--dorado);
+		background-color: rgb(255 255 255 / 0.06);
+	}
+
+	.encabezado-obras__ficha-numero,
+	.encabezado-obras__ficha-cantidad {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.encabezado-obras__ficha-numero {
+		color: var(--dorado);
+	}
+
+	.encabezado-obras__ficha-nombre {
+		font-family: var(--font-display);
+		font-size: 1.4rem;
+		line-height: 1.15;
+	}
+
+	.encabezado-obras__ficha-cantidad {
+		margin-top: 0.25rem;
+		color: var(--azul-bruma);
+	}
+
+
+	/* Celular: fichas más compactas, para que no ocupen toda la pantalla. */
+	@media (max-width: 39.99rem) {
+		.encabezado-obras__fichas ol {
+			gap: 0.5rem;
+		}
+
+		.encabezado-obras__fichas a {
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: baseline;
+			column-gap: 1rem;
+			padding: 0.8rem 1rem;
+		}
+
+		.encabezado-obras__ficha-numero {
+			grid-column: 1 / -1;
+		}
+
+		.encabezado-obras__ficha-nombre {
+			font-size: 1.2rem;
+		}
+
+		.encabezado-obras__ficha-cantidad {
+			margin-top: 0;
+		}
+	}
+
+	@media (min-width: 40rem) {
+		.encabezado-obras__fichas ol {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 64rem) {
+		.encabezado-obras__encabezado {
+			padding-top: 9.5rem;
+		}
+
+		.encabezado-obras__fichas ol {
+			grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+			gap: 1rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.encabezado-obras__fichas a {
+			transition: none;
+		}
+	}
+</style>

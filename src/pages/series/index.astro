@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import ListadoSeries from '../../components/series/ListadoSeries.astro'
+import EncabezadoObras from '../../components/series/EncabezadoObras.astro'
 import { fetchInicio, fetchSeries } from '../../lib/sanity.js'
 
 // Las obras de ilustración se muestran en Ilustraciones, no acá.
@@ -8,6 +9,12 @@ const series = await fetchSeries({ excluirDisciplina: 'obras-sobre-papel' })
 const { artista, configuracion } = await fetchInicio()
 const nombre = artista?.nombre || ''
 const titulo = nombre ? `Cuadros — ${nombre}` : 'Cuadros'
+const fichas = series.map((serie, indice) => ({
+	href: `#${serie.slug}`,
+	numero: `Obra ${String(indice + 1).padStart(2, '0')}`,
+	nombre: serie.nombre,
+	cantidad: serie.cantidadObras > 0 ? `${serie.cantidadObras} ${serie.cantidadObras === 1 ? 'cuadro' : 'cuadros'}` : '',
+}))
 ---
 
 <Layout
@@ -22,43 +29,13 @@ const titulo = nombre ? `Cuadros — ${nombre}` : 'Cuadros'
 	youtube={configuracion?.youtube}
 	heroAzul
 >
-	{/* Banda azul: título, explicación y las obras como fichas para elegir. */}
-	<header class="series-pagina__encabezado ctx-azul ctx-azul--profundo textura">
-		<div class="contenedor">
-			<div class="series-pagina__titulos">
-				<p class="series-pagina__etiqueta">Obras · series de cuadros</p>
-				<h1 class="series-pagina__titulo">Cuadros</h1>
-				<span class="filete filete--largo" aria-hidden="true" />
-				<p class="series-pagina__bajada">
-					Pinturas y obras de gran formato que exploran territorio, memoria y movimiento. Los cuadros están
-					reunidos en obras: cada obra es una serie que se piensa en conjunto. Elegí una para recorrerla.
-				</p>
-			</div>
-
-			{
-				series.length > 1 && (
-					<nav class="series-pagina__fichas" aria-label="Obras de cuadros">
-						<p class="series-pagina__cuantas">{series.length} obras</p>
-						<ol>
-							{series.map((serie, indice) => (
-								<li>
-									<a href={`#${serie.slug}`}>
-										<span class="series-pagina__ficha-numero">Obra {String(indice + 1).padStart(2, '0')}</span>
-										<span class="series-pagina__ficha-nombre">{serie.nombre}</span>
-										{serie.cantidadObras > 0 && (
-											<span class="series-pagina__ficha-cantidad">
-												{serie.cantidadObras} {serie.cantidadObras === 1 ? 'cuadro' : 'cuadros'}
-											</span>
-										)}
-									</a>
-								</li>
-							))}
-						</ol>
-					</nav>
-				)
-			}
-		</div>
-	</header>
+	<EncabezadoObras
+		etiqueta="Obras · series de cuadros"
+		titulo="Cuadros"
+		bajada="Pinturas y obras de gran formato que exploran territorio, memoria y movimiento. Los cuadros están reunidos en obras: cada obra es una serie que se piensa en conjunto. Elegí una para recorrerla."
+		fichas={fichas}
+		cuantas={`${series.length} obras`}
+	/>
 
 	<section class="series-pagina__lista contenedor" aria-label="Obras">
 		<ListadoSeries series={series} />
@@ -66,159 +43,7 @@ const titulo = nombre ? `Cuadros — ${nombre}` : 'Cuadros'
 </Layout>
 
 <style>
-	.series-pagina__encabezado {
-		padding-top: 7.5rem;
-		padding-bottom: clamp(3rem, 6vw, 4.5rem);
-	}
-
-	.series-pagina__titulos {
-		display: grid;
-		justify-items: start;
-		gap: 1rem;
-	}
-
-	.series-pagina__etiqueta {
-		font-family: var(--font-ui);
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--dorado);
-	}
-
-	.series-pagina__titulo {
-		font-family: var(--font-display);
-		font-size: clamp(3.25rem, 2rem + 4.5vw, 6rem);
-		font-weight: 400;
-		line-height: 0.95;
-		color: var(--blanco-calido);
-	}
-
-	.series-pagina__bajada {
-		max-width: 40rem;
-		margin-top: 0.5rem;
-		font-family: var(--font-body);
-		font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.2rem);
-		line-height: 1.7;
-		color: color-mix(in srgb, var(--blanco-calido) 86%, transparent);
-	}
-
-	/* Fichas de las obras: llevan a cada una dentro de la página. */
-	.series-pagina__fichas {
-		margin-top: clamp(2.5rem, 5vw, 3.5rem);
-	}
-
-	.series-pagina__cuantas {
-		margin-bottom: 1rem;
-		font-family: var(--font-ui);
-		font-size: 0.6875rem;
-		font-weight: 500;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--azul-bruma);
-	}
-
-	.series-pagina__fichas ol {
-		display: grid;
-		gap: 0.75rem;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.series-pagina__fichas a {
-		display: grid;
-		gap: 0.35rem;
-		height: 100%;
-		padding: 1.1rem 1.25rem 1.25rem;
-		border: 1px solid rgb(212 161 78 / 0.35);
-		color: var(--blanco-calido);
-		text-decoration: none;
-		transition:
-			background-color 0.3s var(--ease),
-			border-color 0.3s var(--ease);
-	}
-
-	.series-pagina__fichas a:hover,
-	.series-pagina__fichas a:focus-visible {
-		border-color: var(--dorado);
-		background-color: rgb(255 255 255 / 0.06);
-	}
-
-	.series-pagina__ficha-numero,
-	.series-pagina__ficha-cantidad {
-		font-family: var(--font-ui);
-		font-size: 0.6875rem;
-		font-weight: 500;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-	}
-
-	.series-pagina__ficha-numero {
-		color: var(--dorado);
-	}
-
-	.series-pagina__ficha-nombre {
-		font-family: var(--font-display);
-		font-size: 1.4rem;
-		line-height: 1.15;
-	}
-
-	.series-pagina__ficha-cantidad {
-		margin-top: 0.25rem;
-		color: var(--azul-bruma);
-	}
-
 	.series-pagina__lista {
 		padding-bottom: clamp(2rem, 5vw, 4rem);
-	}
-
-	/* Celular: fichas más compactas, para que no ocupen toda la pantalla. */
-	@media (max-width: 39.99rem) {
-		.series-pagina__fichas ol {
-			gap: 0.5rem;
-		}
-
-		.series-pagina__fichas a {
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: baseline;
-			column-gap: 1rem;
-			padding: 0.8rem 1rem;
-		}
-
-		.series-pagina__ficha-numero {
-			grid-column: 1 / -1;
-		}
-
-		.series-pagina__ficha-nombre {
-			font-size: 1.2rem;
-		}
-
-		.series-pagina__ficha-cantidad {
-			margin-top: 0;
-		}
-	}
-
-	@media (min-width: 40rem) {
-		.series-pagina__fichas ol {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (min-width: 64rem) {
-		.series-pagina__encabezado {
-			padding-top: 9.5rem;
-		}
-
-		.series-pagina__fichas ol {
-			grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-			gap: 1rem;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.series-pagina__fichas a {
-			transition: none;
-		}
 	}
 </style>

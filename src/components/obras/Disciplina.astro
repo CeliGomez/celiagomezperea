@@ -1,40 +1,51 @@
 ---
-import Imagen from '../home/Imagen.astro'
 import ListadoSeries from '../series/ListadoSeries.astro'
 import ColeccionObras from '../series/ColeccionObras.astro'
-import { rutas } from '../../lib/rutas.js'
+import EncabezadoObras from '../series/EncabezadoObras.astro'
 
+/*
+	Página de una disciplina (Ilustraciones). Igual que Cuadros:
+	banda azul con fichas, las obras (series) en franjas alternadas y, al final, las ilustraciones sueltas.
+*/
 const { disciplina, series = [], obras = [] } = Astro.props
 const papel = disciplina?.slug === 'obras-sobre-papel'
 const vacia = series.length === 0 && obras.length === 0
+const unidad = (n) => (papel ? (n === 1 ? 'ilustración' : 'ilustraciones') : n === 1 ? 'obra' : 'obras')
+
+const fichas = [
+	...series.map((serie, indice) => ({
+		href: `#${serie.slug}`,
+		numero: `Obra ${String(indice + 1).padStart(2, '0')}`,
+		nombre: serie.nombre,
+		cantidad: serie.cantidadObras > 0 ? `${serie.cantidadObras} ${unidad(serie.cantidadObras)}` : '',
+	})),
+	...(obras.length > 0 && series.length > 0
+		? [
+				{
+					href: '#sueltas',
+					numero: 'Fuera de serie',
+					nombre: papel ? 'Ilustraciones sueltas' : 'Otras obras',
+					cantidad: `${obras.length} ${unidad(obras.length)}`,
+				},
+			]
+		: []),
+]
+
+const etiqueta = papel ? 'Obras · series de ilustraciones' : 'Obras'
+const bajada = papel
+	? `${disciplina.descripcion ? disciplina.descripcion + ' ' : ''}Algunas ilustraciones están reunidas en obras, cada una una serie; otras se muestran sueltas, al final.`
+	: disciplina.descripcion || ''
+const cuantas = series.length > 0 ? `${series.length} ${series.length === 1 ? 'obra' : 'obras'}${obras.length ? ' y sueltas' : ''}` : ''
+// Las sueltas siguen la alternancia de las franjas: crema si la última obra quedó en blanco.
+const sueltasCrema = series.length % 2 === 1
 ---
 
 <article class="disciplina">
-	<header class="disciplina__encabezado contenedor">
-		<p class="label">Disciplina</p>
-		<h1 class="page-title">{disciplina.nombre}</h1>
-		{disciplina.descripcion && <p class="t-texto medida disciplina__texto">{disciplina.descripcion}</p>}
-		{
-			disciplina.portada && (
-				<div class="disciplina__portada">
-					<Imagen
-						source={disciplina.portada}
-						alt={disciplina.portada?.alt || disciplina.nombre}
-						width={1200}
-						marco="portada"
-						proporcion="horizontal"
-						priority
-						sizes="(min-width: 64rem) 42rem, 100vw"
-					/>
-				</div>
-			)
-		}
-	</header>
+	<EncabezadoObras etiqueta={etiqueta} titulo={disciplina.nombre} bajada={bajada} fichas={fichas} cuantas={cuantas} />
 
 	{
 		series.length > 0 && (
-			<section class="disciplina__bloque contenedor" aria-labelledby="disciplina-series">
-				<h2 id="disciplina-series" class="titulo-seccion">Series</h2>
+			<section class="disciplina__lista contenedor" aria-label="Obras">
 				<ListadoSeries series={series} />
 			</section>
 		)
@@ -42,61 +53,111 @@ const vacia = series.length === 0 && obras.length === 0
 
 	{
 		obras.length > 0 && (
-			<section class="disciplina__bloque contenedor" aria-labelledby="disciplina-obras">
-				<h2 id="disciplina-obras" class="titulo-seccion">{papel && series.length > 0 ? 'Otras ilustraciones' : 'Obras'}</h2>
-				<ColeccionObras obras={obras} papel={papel} prioridad={disciplina.portada ? 0 : 1} />
+			<section
+				id="sueltas"
+				class:list={['disciplina__sueltas', sueltasCrema && 'disciplina__sueltas--crema']}
+				aria-labelledby="disciplina-sueltas"
+			>
+				<div class="contenedor">
+					<div class="disciplina__sueltas-encabezado">
+						{series.length > 0 && (
+							<p class="disciplina__sueltas-etiqueta">
+								<span>Fuera de serie</span>
+								<span class="disciplina__sueltas-filete" aria-hidden="true" />
+							</p>
+						)}
+						<h2 id="disciplina-sueltas" class="disciplina__sueltas-titulo">
+							{series.length > 0 ? (papel ? 'Ilustraciones sueltas' : 'Otras obras') : papel ? 'Ilustraciones' : 'Obras'}
+						</h2>
+						{series.length > 0 && papel && (
+							<p class="disciplina__sueltas-texto">Ilustraciones que no forman parte de una obra.</p>
+						)}
+					</div>
+					<ColeccionObras obras={obras} papel={papel} prioridad={series.length ? 0 : 2} />
+				</div>
 			</section>
 		)
 	}
 
 	{
 		vacia && (
-			<p class="t-texto disciplina__vacio contenedor">Todavía no hay series ni obras publicadas en esta disciplina.</p>
+			<p class="t-texto disciplina__vacio contenedor">Todavía no hay obras publicadas en esta sección.</p>
 		)
 	}
-
-	<p class="disciplina__resto contenedor">
-		<a class="detalle-volver__link" href={rutas.obras}>
-			<span class="detalle-volver__flecha" aria-hidden="true">←</span>
-			Toda la obra
-		</a>
-	</p>
 </article>
 
 <style>
-	.disciplina {
-		padding-bottom: clamp(3rem, 6vw, 5rem);
+	.disciplina__lista {
+		padding-bottom: 0;
 	}
 
-	.disciplina__encabezado {
+	.disciplina__sueltas {
+		padding-block: clamp(3.5rem, 7vw, 6rem);
+		scroll-margin-top: 4rem;
+	}
+
+	.disciplina__sueltas--crema {
+		background-color: var(--marfil);
+	}
+
+	.disciplina__sueltas-encabezado {
 		display: grid;
 		justify-items: start;
-		gap: 0.85rem;
-		padding-top: clamp(2.5rem, 6vw, 4.5rem);
+		margin-bottom: clamp(2rem, 4vw, 3rem);
 	}
 
-	.disciplina__texto {
-		margin-top: 0.35rem;
+	.disciplina__sueltas-etiqueta {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 1.1rem;
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		color: var(--dorado-oscuro);
 	}
 
-	.disciplina__portada {
-		width: min(100%, 42rem);
-		margin-top: 1.25rem;
+	.disciplina__sueltas-filete {
+		display: block;
+		width: 3rem;
+		height: 1px;
+		background-color: var(--dorado);
 	}
 
-	.disciplina__bloque {
-		display: grid;
-		gap: 1.75rem;
-		padding-top: clamp(2.5rem, 5vw, 4rem);
+	.disciplina__sueltas-titulo {
+		font-family: var(--font-display);
+		font-size: clamp(2.25rem, 1.4rem + 2.6vw, 3.75rem);
+		font-weight: 400;
+		line-height: 1;
+		color: var(--tinta);
+	}
+
+	.disciplina__sueltas-texto {
+		margin-top: 1rem;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--tinta) 82%, transparent);
+	}
+
+	/* Grilla de sueltas más llena: 3 columnas en tablet y 4 en escritorio. */
+	@media (min-width: 48rem) {
+		.disciplina__sueltas :global(.coleccion) {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 3rem 2rem;
+		}
+	}
+
+	@media (min-width: 80rem) {
+		.disciplina__sueltas :global(.coleccion) {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
 	}
 
 	.disciplina__vacio {
 		max-width: 36rem;
-		margin-top: 1.5rem;
+		padding-block: 3rem;
 		color: var(--gris);
-	}
-
-	.disciplina__resto {
-		margin-top: clamp(2.5rem, 5vw, 4rem);
 	}
 </style>
