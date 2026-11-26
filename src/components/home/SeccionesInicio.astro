@@ -3,7 +3,9 @@ import Imagen from './Imagen.astro'
 import Flecha from '../layout/Flecha.astro'
 
 /*
-	Filas horizontales apiladas: imagen a la izquierda (53 %) y panel de texto a la derecha (47 %).
+	Tarjetas de secciones: en celular una debajo de la otra; desde tablet, una grilla de 2 × 2.
+	Cada tarjeta: la foto arriba en 4:3 (se ve casi entera, no corta caras) y el panel de texto abajo.
+	Los paneles alternan azul y crema en damero (el tono sale de cada sección en demo.js).
 	secciones: salida de fetchSeccionesInicio(). Sin filas, la sección no se muestra.
 	Cada fila entera es un enlace. Sin imagen, la mitad izquierda muestra un fondo con textura y el título.
 	miniatura: fotograma de Vimeo (si la fila lo pide y hay video); tiene prioridad sobre la imagen.
@@ -28,7 +30,7 @@ const { secciones = [] } = Astro.props
 									<img
 										src={seccion.miniatura.src}
 										srcset={seccion.miniatura.srcset || undefined}
-										sizes="(min-width: 64rem) 53vw, 100vw"
+										sizes="(min-width: 48rem) 50vw, 100vw"
 										alt={seccion.miniatura.alt}
 										width="1280"
 										height="720"
@@ -41,10 +43,10 @@ const { secciones = [] } = Astro.props
 										alt={seccion.imagen.alt || seccion.titulo}
 										titulo={seccion.titulo}
 										width={1200}
-										height={700}
+										height={900}
 										marco="portada"
 										proporcion="horizontal"
-										sizes="(min-width: 64rem) 53vw, 100vw"
+										sizes="(min-width: 48rem) 50vw, 100vw"
 									/>
 								) : (
 									<span class="fila__vacia" aria-hidden="true">
@@ -87,7 +89,7 @@ const { secciones = [] } = Astro.props
 
 	.secciones__lista {
 		display: grid;
-		gap: 1.75rem;
+		gap: 1.5rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -95,6 +97,8 @@ const { secciones = [] } = Astro.props
 
 	.fila {
 		display: grid;
+		grid-template-rows: auto 1fr;
+		height: 100%;
 		overflow: hidden;
 		color: inherit;
 		text-decoration: none;
@@ -105,10 +109,10 @@ const { secciones = [] } = Astro.props
 		outline-offset: 4px;
 	}
 
-	/* Imagen: a todo el ancho en 16:9 (móvil y tablet). */
+	/* Imagen arriba en 4:3: muestra casi toda la foto. */
 	.fila__imagen {
 		position: relative;
-		aspect-ratio: 16 / 9;
+		aspect-ratio: 4 / 3;
 		overflow: hidden;
 		background-color: var(--marfil);
 	}
@@ -173,8 +177,8 @@ const { secciones = [] } = Astro.props
 	.fila__texto {
 		display: grid;
 		justify-items: start;
-		align-content: center;
-		padding: 1.75rem;
+		align-content: start;
+		padding: 1.75rem 1.75rem 2.25rem;
 	}
 
 	.fila__filete {
@@ -187,7 +191,7 @@ const { secciones = [] } = Astro.props
 
 	.fila__titulo {
 		font-family: var(--font-display);
-		font-size: clamp(2.5rem, 4.2vw, 4rem);
+		font-size: clamp(2.4rem, 3.4vw, 3.5rem);
 		font-weight: 500;
 		line-height: 1.05;
 		letter-spacing: 0;
@@ -260,27 +264,21 @@ const { secciones = [] } = Astro.props
 		}
 	}
 
-	/* Tablet: el panel conserva su margen de 28 px; el título crece un poco. */
+	/* Tablet y escritorio: grilla de 2 × 2, tarjetas del mismo alto. */
 	@media (min-width: 48rem) {
+		.secciones__lista {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: clamp(1.25rem, 2vw, 2rem);
+		}
+
 		.fila__texto {
-			padding: 2rem 1.75rem 2.25rem;
+			padding: 2.25rem 2.25rem 2.75rem;
 		}
 	}
 
-	/* Escritorio: imagen 53 % y panel 47 %, del mismo alto. */
 	@media (min-width: 64rem) {
-		.fila {
-			grid-template-columns: minmax(0, 53fr) minmax(0, 47fr);
-			height: 19.25rem;
-		}
-
-		.fila__imagen {
-			aspect-ratio: auto;
-			height: 100%;
-		}
-
 		.fila__texto {
-			padding: 1.5rem 3rem 1.5rem 4rem;
+			padding: 2.75rem clamp(2.5rem, 4vw, 4rem) 3.25rem;
 		}
 	}
 

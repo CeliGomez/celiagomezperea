@@ -549,7 +549,7 @@ export const seccionesInicio = [
 			),
 			hotspot: { x: 0.45, y: 0.17, width: 1, height: 1 },
 		},
-		tono: 'azul',
+		tono: 'marfil',
 		usarMiniaturaVideo: false,
 	},
 	{
@@ -570,7 +570,7 @@ export const seccionesInicio = [
 			),
 			hotspot: { x: 0.5, y: 0.5, width: 1, height: 1 },
 		},
-		tono: 'marfil',
+		tono: 'azul',
 		usarMiniaturaVideo: false,
 	},
 ]
