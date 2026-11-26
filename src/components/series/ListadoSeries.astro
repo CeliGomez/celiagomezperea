@@ -1,133 +1,352 @@
 ---
 import Imagen from '../home/Imagen.astro'
+import Flecha from '../layout/Flecha.astro'
 
-// series: salida de fetchSeries() o fetchSeriesDestacadas().
+/*
+	Listado de obras (series) de Cuadros e Ilustraciones, como salas de una muestra.
+	Cada obra es una fila: a un lado un collage (la portada grande y dos cuadros más chicos de la misma obra)
+	y al otro el número, el nombre, la presentación y «Ver la obra». Las filas alternan de lado.
+	En celular: el collage arriba (portada y, debajo, los dos chicos en fila) y el texto abajo.
+	series: salida de fetchSeries(). Cada serie trae `muestras` (hasta dos imágenes además de la portada).
+*/
 const { series = [] } = Astro.props
-const modo = series.length <= 1 ? 'una' : series.length === 2 ? 'dos' : 'varias'
+const numero = (indice) => String(indice + 1).padStart(2, '0')
+const unidad = (serie) =>
+	serie.disciplina?.slug === 'obras-sobre-papel'
+		? serie.cantidadObras === 1
+			? 'ilustración'
+			: 'ilustraciones'
+		: serie.cantidadObras === 1
+			? 'cuadro'
+			: 'cuadros'
 ---
 
 {
 	series.length > 0 && (
-		<ul class:list={['catalogo', `catalogo--${modo}`]}>
-			{series.map((serie, indice) => (
-				<li class="catalogo__item">
-					<a class="pieza" href={serie.href}>
-						<div class="pieza__portada">
-							<Imagen
-								source={serie.portada}
-								alt={serie.portada?.alt || serie.nombre}
-								width={900}
-								height={1120}
-								marco="portada"
-								proporcion="vertical"
-								priority={indice === 0}
-								sizes="(min-width: 64rem) 30vw, (min-width: 48rem) 46vw, 100vw"
-							/>
-						</div>
-						<div class="pieza__texto">
-							<h2 class="pieza__nombre">{serie.nombre}</h2>
-							{serie.anio && <p class="pieza__meta">{serie.anio}</p>}
-							{serie.descripcion && <p class="t-texto pieza__descripcion">{serie.descripcion}</p>}
-							{serie.cantidadObras > 0 && (
-								<p class="pieza__meta">
-									{serie.cantidadObras} {serie.cantidadObras === 1 ? 'obra' : 'obras'}
+		<ol class="muestra">
+			{series.map((serie, indice) => {
+				const muestras = serie.muestras || []
+				return (
+					<li class:list={['muestra__item fade-in', indice % 2 === 1 && 'muestra__item--invertida']} id={serie.slug}>
+						<a class="sala-obra" href={serie.href}>
+							<div class:list={['sala-obra__collage', muestras.length === 0 && 'sala-obra__collage--sola']}>
+								<div class="sala-obra__principal">
+									<Imagen
+										source={serie.portada}
+										alt={serie.portada?.alt || serie.nombre}
+										titulo={serie.nombre}
+										width={900}
+										height={1125}
+										marco="portada"
+										proporcion="vertical"
+										priority={indice === 0}
+										sizes="(min-width: 64rem) 36vw, 100vw"
+									/>
+								</div>
+								{muestras.length > 0 && (
+									<div class="sala-obra__secundarias">
+										{muestras.map((imagen) => (
+											<div class="sala-obra__chica">
+												<Imagen
+													source={imagen}
+													alt={imagen?.alt || `Cuadro de la obra ${serie.nombre}`}
+													titulo={serie.nombre}
+													width={500}
+													height={500}
+													marco="portada"
+													proporcion="cuadrada"
+													sizes="(min-width: 64rem) 18vw, 50vw"
+												/>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+
+							<div class="sala-obra__texto">
+								<p class="sala-obra__numero">
+									<span>Obra {numero(indice)}</span>
+									<span class="sala-obra__filete" aria-hidden="true" />
 								</p>
-							)}
-						</div>
-					</a>
-				</li>
-			))}
-		</ul>
+								<h2 class="sala-obra__nombre">{serie.nombre}</h2>
+								{(serie.anio || serie.tecnicaGeneral) && (
+									<p class="sala-obra__meta">{[serie.anio, serie.tecnicaGeneral].filter(Boolean).join(' · ')}</p>
+								)}
+								{serie.descripcion && <p class="sala-obra__descripcion">{serie.descripcion}</p>}
+								<p class="sala-obra__pie">
+									{serie.cantidadObras > 0 && (
+										<span class="sala-obra__cantidad">
+											{serie.cantidadObras} {unidad(serie)}
+										</span>
+									)}
+									<span class="sala-obra__ver">
+										Ver la obra
+										<Flecha />
+									</span>
+								</p>
+							</div>
+						</a>
+					</li>
+				)
+			})}
+		</ol>
 	)
 }
 
 <style>
-	.catalogo {
+	.muestra {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: 3rem 2rem;
+		gap: 0;
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
-	.pieza {
+	/* Al saltar desde el índice, que el encabezado fijo no tape la obra. */
+	/* Cada obra es una franja; una sí y una no lleva fondo crema a todo el ancho de la pantalla. */
+	.muestra__item {
+		padding-block: clamp(3.5rem, 7vw, 6rem);
+		scroll-margin-top: 4rem;
+	}
+
+	.muestra__item--invertida {
+		background-color: var(--marfil);
+		box-shadow: 0 0 0 100vmax var(--marfil);
+		clip-path: inset(0 -100vmax);
+	}
+
+	.muestra__item--invertida .sala-obra__principal,
+	.muestra__item--invertida .sala-obra__chica {
+		background-color: var(--blanco-calido);
+	}
+
+	.sala-obra {
 		display: grid;
-		gap: 1.1rem;
+		gap: 2rem;
 		color: var(--tinta);
 		text-decoration: none;
 	}
 
-	/* Todas las portadas con el mismo ancho y formato (4:5): los títulos quedan alineados. */
-	.pieza__portada {
-		width: 100%;
+	.sala-obra:focus-visible {
+		outline: 1px solid var(--dorado);
+		outline-offset: 8px;
 	}
 
-	.pieza__portada :global(.marco) {
+	/* ——— Collage ——— */
+	.sala-obra__collage {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	.sala-obra__principal,
+	.sala-obra__chica {
+		overflow: hidden;
+		background-color: var(--marfil);
+	}
+
+	.sala-obra__principal :global(.marco),
+	.sala-obra__chica :global(.marco) {
+		display: block;
 		width: 100%;
 		max-width: none !important;
 	}
 
-	.pieza__nombre {
-		font-family: var(--font-display);
-		font-size: clamp(1.85rem, 2vw + 1rem, 2.75rem);
-		font-weight: 500;
-		line-height: 1.05;
-		text-wrap: balance;
+	.sala-obra__principal :global(img),
+	.sala-obra__chica :global(img) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.9s var(--ease);
 	}
 
-	.pieza__meta {
-		margin-top: 0.45rem;
-		color: var(--gris);
+	.sala-obra__secundarias {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
+
+	/* Con una sola chica, ocupa media fila igual (no se estira). */
+	.sala-obra__secundarias:has(> :only-child) {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+
+	/* ——— Texto ——— */
+	.sala-obra__texto {
+		display: grid;
+		justify-items: start;
+		align-content: center;
+	}
+
+	.sala-obra__numero {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		color: var(--dorado-oscuro);
+	}
+
+	.sala-obra__filete {
+		display: block;
+		width: 3rem;
+		height: 1px;
+		background-color: var(--dorado);
+		transition: width 0.5s var(--ease);
+	}
+
+	.sala-obra__nombre {
+		margin-top: 1.1rem;
+		font-family: var(--font-display);
+		font-size: clamp(2.25rem, 1.4rem + 2.6vw, 3.75rem);
+		font-weight: 400;
+		line-height: 1;
+		text-wrap: balance;
+		transition: color 0.4s var(--ease);
+	}
+
+	.sala-obra__meta {
+		margin-top: 0.9rem;
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+	}
+
+	.sala-obra__descripcion {
+		display: -webkit-box;
+		max-width: 30rem;
+		margin-top: 1.25rem;
+		overflow: hidden;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--tinta) 82%, transparent);
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+		line-clamp: 4;
+	}
+
+	.sala-obra__pie {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 2rem;
+		margin-top: 1.75rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.sala-obra__cantidad {
 		font-family: var(--font-ui);
 		font-size: 0.75rem;
 		font-weight: 500;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
 	}
 
-	.pieza__descripcion {
-		display: -webkit-box;
-		max-width: 34rem;
-		margin-top: 0.75rem;
-		overflow: hidden;
-		color: var(--tinta);
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
+	.sala-obra__ver {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.65rem;
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--azul-profundo);
+		transition: color 0.4s var(--ease);
 	}
 
-	.pieza:focus-visible {
-		outline: 1px solid var(--azul-medio);
-		outline-offset: 6px;
+	.sala-obra__ver :global(.flecha) {
+		transition: transform 0.4s var(--ease);
 	}
 
-	@media (min-width: 48rem) {
-		.catalogo--dos,
-		.catalogo--varias {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-			align-items: start;
-		}
-
-		.catalogo--una {
-			grid-template-columns: minmax(0, 26rem);
-		}
-	}
-
-	@media (min-width: 64rem) {
-		.catalogo--dos {
-			grid-template-columns: repeat(2, minmax(0, 26rem));
-			column-gap: clamp(2rem, 5vw, 5rem);
-		}
-
-		.catalogo--varias {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-	}
-
+	/* ——— Hover ——— */
 	@media (hover: hover) and (pointer: fine) {
-		.pieza:hover .pieza__nombre {
+		.sala-obra:hover .sala-obra__principal :global(img) {
+			transform: scale(1.03);
+		}
+
+		.sala-obra:hover .sala-obra__nombre {
 			color: var(--azul-medio);
+		}
+
+		.sala-obra:hover .sala-obra__filete {
+			width: 4.5rem;
+		}
+
+		.sala-obra:hover .sala-obra__ver {
+			color: var(--dorado-oscuro);
+		}
+
+		.sala-obra:hover .sala-obra__ver :global(.flecha) {
+			transform: translateX(4px);
+		}
+	}
+
+	/* ——— Tablet ——— */
+	@media (min-width: 48rem) {
+		.sala-obra__collage {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+			align-items: end;
+			gap: 1rem;
+		}
+
+		.sala-obra__collage--sola {
+			grid-template-columns: minmax(0, 1fr);
+			max-width: 32rem;
+		}
+
+		.sala-obra__secundarias,
+		.sala-obra__secundarias:has(> :only-child) {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 1rem;
+		}
+	}
+
+	/* ——— Escritorio: collage y texto lado a lado, alternando ——— */
+	@media (min-width: 64rem) {
+		.sala-obra {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+			align-items: center;
+			gap: clamp(3rem, 6vw, 6.5rem);
+		}
+
+		.muestra__item--invertida .sala-obra {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		}
+
+		.muestra__item--invertida .sala-obra__collage {
+			order: 2;
+		}
+
+		.muestra__item--invertida .sala-obra__collage:not(.sala-obra__collage--sola) {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		}
+
+		.muestra__item--invertida .sala-obra__principal {
+			order: 2;
+		}
+
+		.muestra__item--invertida .sala-obra__collage--sola {
+			justify-self: end;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sala-obra__principal :global(img),
+		.sala-obra__chica :global(img),
+		.sala-obra__nombre,
+		.sala-obra__filete,
+		.sala-obra__ver,
+		.sala-obra__ver :global(.flecha) {
+			transition: none;
 		}
 	}
 </style>

@@ -1105,6 +1105,8 @@ const proyeccionSerie = `{
   portada ${imagen},
   "portadaObra": *[_type == "obra" && ${VISIBLE} && serie._ref == ^._id && defined(imagenPrincipal.asset)]
     | order(coalesce(ordenEnSerie, 999999) asc)[0].imagenPrincipal ${imagen},
+  "muestras": *[_type == "obra" && ${VISIBLE} && serie._ref == ^._id && defined(imagenPrincipal.asset)]
+    | order(coalesce(ordenEnSerie, 999999) asc)[0...4].imagenPrincipal ${imagen},
   "disciplina": disciplina->{ nombre, "slug": slug.current },
   "cantidadObras": count(*[_type == "obra" && ${VISIBLE} && serie._ref == ^._id])
 }`
@@ -1161,6 +1163,23 @@ function portadaDeSerie(serie, obras) {
   return primera ? primera.imagenPrincipal : null
 }
 
+function claveImagen(imagen) {
+  return imagen?.asset?._id || imagen?.asset?._ref || ''
+}
+
+function muestrasDeSerie(serie, obras, portada) {
+  const lista = Array.isArray(serie.muestras)
+    ? serie.muestras
+    : (obras || [])
+        .filter((obra) => obra.serie?.slug === serie.slug)
+        .sort((a, b) => (a.ordenEnSerie ?? 999999) - (b.ordenEnSerie ?? 999999))
+        .map((obra) => obra.imagenPrincipal)
+  const clavePortada = claveImagen(portada)
+  return lista
+    .filter((imagen) => imagenDisponible(imagen) && claveImagen(imagen) !== clavePortada)
+    .slice(0, 2)
+}
+
 function prepararSerie(serie, obras) {
   const cantidadObras = Number.isFinite(serie.cantidadObras)
     ? serie.cantidadObras
@@ -1177,12 +1196,15 @@ function prepararSerie(serie, obras) {
           .map((parrafo) => `<p>${parrafo.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>`)
           .join('')
       : htmlDePortable(serie.descripcion)
+  const portada = portadaDeSerie(serie, obras)
   return {
     nombre: serie.nombre || '',
     slug: serie.slug || '',
     href: rutaSerie(serie.slug),
     disciplina: normalizarDisciplina(serie.disciplina),
-    portada: portadaDeSerie(serie, obras),
+    portada,
+    // Hasta dos cuadros más de la obra (distintos de la portada), para el collage del listado.
+    muestras: muestrasDeSerie(serie, obras, portada),
     descripcion,
     descripcionHtml,
     anio: String(serie.anio || '').trim(),
