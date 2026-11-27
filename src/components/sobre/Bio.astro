@@ -1,82 +1,203 @@
 ---
 import { htmlDePortable } from '../../lib/texto.js'
+import { rutas } from '../../lib/rutas.js'
+import Flecha from '../layout/Flecha.astro'
 
+/*
+	Página La artista, en franjas:
+	1. Banda azul: nombre, bio corta y tres datos; a la derecha el retrato enmarcado.
+	2. Frase del statement en grande, sobre la foto de los materiales del taller (oscurecida).
+	3. Biografía: foto del taller a la izquierda (queda fija al bajar) y el texto a la derecha.
+	4. Statement completo, en franja crema, como texto de sala; a la izquierda, su foto en la silla turquesa.
+	5. Trayectoria: cifras arriba y los cinco grupos del CV, con «Ver más».
+	6. Cierre: foto con los pasteles e invitación a contactarla (y el CV, cuando esté).
+*/
 const { artista } = Astro.props
 const bioHtml = htmlDePortable(artista?.bioCompleta)
 const statementHtml = htmlDePortable(artista?.statement)
 const grupos = artista?.grupos || []
+const datos = artista?.datos || []
 const visibles = 4
+
+// Cifras de la trayectoria, a partir del CV cargado.
+const cuenta = (id) => grupos.find((grupo) => grupo.id === id)?.items.length || 0
+const anios = grupos
+	.flatMap((grupo) => grupo.items)
+	.map((item) => Number(String(item.periodo || '').match(/\d{4}/)?.[0]))
+	.filter(Boolean)
+const desde = anios.length ? Math.min(...anios) : null
+const cifras = [
+	cuenta('obras') && { numero: cuenta('obras'), texto: 'obras y exposiciones' },
+	cuenta('premios') && { numero: cuenta('premios'), texto: 'premios, becas y residencias' },
+	desde && { numero: new Date().getFullYear() - desde, texto: `años de recorrido, desde ${desde}` },
+].filter(Boolean)
 ---
 
 <article class="sobre">
-	<header class="sobre-presentacion contenedor">
-		{
-			artista?.retrato && (
-				<figure class="sobre-presentacion__foto">
-					<img
-						src={artista.retrato.src}
-						srcset={artista.retrato.srcset}
-						sizes="(min-width: 64rem) 34vw, 100vw"
-						alt={artista.retrato.alt || artista.nombre}
-						width={artista.retrato.ancho}
-						height={artista.retrato.alto}
-						loading="eager"
-						fetchpriority="high"
-						decoding="async"
-					/>
-				</figure>
-			)
-		}
-		<div class="sobre-presentacion__texto">
-			<p class="label">Sobre la artista</p>
-			<h1 class="page-title">{artista?.nombre}</h1>
-			{artista?.bioCorta && <p class="t-texto sobre-presentacion__corta">{artista.bioCorta}</p>}
+	{/* ——— 1. Banda azul ——— */}
+	<header class="sobre-hero ctx-azul ctx-azul--profundo textura">
+		<div class="sobre-hero__inner contenedor">
+			<div class="sobre-hero__texto">
+				<p class="sobre-etiqueta sobre-etiqueta--dorada">La artista</p>
+				<h1 class="sobre-hero__nombre">{artista?.nombre}</h1>
+				<span class="filete filete--largo" aria-hidden="true" />
+				{artista?.subtitulo && <p class="sobre-hero__subtitulo">{artista.subtitulo} · Chubut, Patagonia argentina</p>}
+				{artista?.bioCorta && <p class="sobre-hero__corta">{artista.bioCorta}</p>}
+				{
+					datos.length > 0 && (
+						<dl class="sobre-hero__datos">
+							{datos.map((dato) => (
+								<div>
+									<dt>{dato.titulo}</dt>
+									<dd>{dato.texto}</dd>
+								</div>
+							))}
+						</dl>
+					)
+				}
+			</div>
+			{
+				artista?.retrato && (
+					<figure class="sobre-hero__foto">
+						<img
+							src={artista.retrato.src}
+							srcset={artista.retrato.srcset}
+							sizes="(min-width: 64rem) 30vw, 100vw"
+							alt={artista.retrato.alt || artista.nombre}
+							width={artista.retrato.ancho}
+							height={artista.retrato.alto}
+							loading="eager"
+							fetchpriority="high"
+							decoding="async"
+						/>
+					</figure>
+				)
+			}
 		</div>
 	</header>
 
+	{/* ——— 2. Frase sobre la foto de los materiales ——— */}
+	{
+		artista?.fraseStatement && (
+			<section class="sobre-frase" aria-label="Frase de la artista">
+				{artista?.fondoFrase && (
+					<img
+						class="sobre-frase__fondo"
+						src={artista.fondoFrase.src}
+						srcset={artista.fondoFrase.srcset}
+						sizes="100vw"
+						alt=""
+						loading="lazy"
+						decoding="async"
+					/>
+				)}
+				<blockquote class="sobre-frase__cita contenedor">
+					<p>«{artista.fraseStatement}»</p>
+					<footer>{artista?.nombre}</footer>
+				</blockquote>
+			</section>
+		)
+	}
+
+	{/* ——— 3. Biografía ——— */}
 	{
 		bioHtml && (
-			<section class="sobre-bio contenedor sobre-bloque" aria-labelledby="bio-titulo">
-				<h2 id="bio-titulo" class="titulo-seccion sobre-bloque__titulo">Biografía</h2>
-				<div class="sobre-lectura sobre-bloque__cuerpo" set:html={bioHtml} />
+			<section class="sobre-bio" aria-labelledby="bio-titulo">
+				<div class="sobre-bio__inner contenedor">
+					{artista?.fotoBio && (
+						<figure class="sobre-bio__foto">
+							<img
+								src={artista.fotoBio.src}
+								srcset={artista.fotoBio.srcset}
+								sizes="(min-width: 64rem) 34vw, 100vw"
+								alt={artista.fotoBio.alt || ''}
+								width={artista.fotoBio.ancho}
+								height={artista.fotoBio.alto}
+								loading="lazy"
+								decoding="async"
+							/>
+						</figure>
+					)}
+					<div class="sobre-bio__texto">
+						<p class="sobre-etiqueta">Biografía</p>
+						<h2 id="bio-titulo" class="sobre-titulo">Entre la pintura, el cuerpo y el territorio</h2>
+						<div class="sobre-lectura sobre-lectura--capitular" set:html={bioHtml} />
+					</div>
+				</div>
 			</section>
 		)
 	}
 
+	{/* ——— 4. Statement ——— */}
 	{
-		(artista?.fraseStatement || statementHtml) && (
-			<section class="sobre-statement contenedor" aria-labelledby="statement-titulo">
-				<h2 id="statement-titulo" class="sobre-statement__frase">
-					{artista.fraseStatement}
-				</h2>
-				<span class="filete filete--largo" aria-hidden="true" />
-				{statementHtml && <div class="sobre-lectura sobre-statement__texto" set:html={statementHtml} />}
+		statementHtml && (
+			<section class="sobre-statement" aria-labelledby="statement-titulo">
+				<div class="sobre-statement__inner contenedor">
+					<div class="sobre-statement__encabezado">
+						<p class="sobre-etiqueta">Statement</p>
+						<h2 id="statement-titulo" class="sobre-titulo">En sus palabras</h2>
+						{artista?.fotoStatement && (
+							<figure class="sobre-statement__foto">
+								<img
+									src={artista.fotoStatement.src}
+									srcset={artista.fotoStatement.srcset}
+									sizes="(min-width: 64rem) 26vw, 100vw"
+									alt={artista.fotoStatement.alt || ''}
+									width={artista.fotoStatement.ancho}
+									height={artista.fotoStatement.alto}
+									loading="lazy"
+									decoding="async"
+								/>
+							</figure>
+						)}
+					</div>
+					<div class="sobre-lectura sobre-statement__texto" set:html={statementHtml} />
+				</div>
 			</section>
 		)
 	}
 
+	{/* ——— 5. Trayectoria ——— */}
 	{
 		grupos.length > 0 && (
-			<section class="sobre-trayectoria contenedor sobre-bloque" aria-labelledby="trayectoria-titulo">
-				<h2 id="trayectoria-titulo" class="titulo-seccion sobre-bloque__titulo">Trayectoria</h2>
-				<div class="cronologia sobre-bloque__cuerpo">
-					{grupos.map((grupo) => {
-						const primeros = grupo.items.slice(0, visibles)
-						const resto = grupo.items.slice(visibles)
-						return (
-							<section class="cronologia__grupo" aria-labelledby={`grupo-${grupo.id}`}>
-								<h3 id={`grupo-${grupo.id}`} class="cronologia__titulo">{grupo.titulo}</h3>
-								<ol class="cronologia__lista">
-									{primeros.map((item) => (
-										<li>
-											{item.periodo && <p class="cronologia__periodo">{item.periodo}</p>}
-											<p class="cronologia__hecho">{item.titulo}</p>
-											{item.detalle && <p class="cronologia__detalle">{item.detalle}</p>}
-										</li>
-									))}
-								</ol>
-								{
-									resto.length > 0 && (
+			<section class="sobre-trayectoria" aria-labelledby="trayectoria-titulo">
+				<div class="contenedor">
+					<div class="sobre-trayectoria__encabezado">
+						<p class="sobre-etiqueta">Trayectoria</p>
+						<h2 id="trayectoria-titulo" class="sobre-titulo">Recorrido</h2>
+					</div>
+
+					{cifras.length > 0 && (
+						<ul class="sobre-cifras">
+							{cifras.map((cifra) => (
+								<li>
+									<span class="sobre-cifras__numero">{cifra.numero}</span>
+									<span class="sobre-cifras__texto">{cifra.texto}</span>
+								</li>
+							))}
+						</ul>
+					)}
+
+					<div class="cronologia">
+						{grupos.map((grupo) => {
+							const primeros = grupo.items.slice(0, visibles)
+							const resto = grupo.items.slice(visibles)
+							return (
+								<section class="cronologia__grupo" aria-labelledby={`grupo-${grupo.id}`}>
+									<h3 id={`grupo-${grupo.id}`} class="cronologia__titulo">
+										{grupo.titulo}
+										<span>{grupo.items.length}</span>
+									</h3>
+									<ol class="cronologia__lista">
+										{primeros.map((item) => (
+											<li>
+												{item.periodo && <p class="cronologia__periodo">{item.periodo}</p>}
+												<p class="cronologia__hecho">{item.titulo}</p>
+												{item.detalle && <p class="cronologia__detalle">{item.detalle}</p>}
+											</li>
+										))}
+									</ol>
+									{resto.length > 0 && (
 										<details class="cronologia__mas">
 											<summary>Ver {resto.length} más</summary>
 											<ol class="cronologia__lista">
@@ -89,101 +210,392 @@ const visibles = 4
 												))}
 											</ol>
 										</details>
-									)
-								}
-							</section>
-						)
-					})}
+									)}
+								</section>
+							)
+						})}
+					</div>
 				</div>
 			</section>
 		)
 	}
 
-	{
-		artista?.cvUrl && (
-			<p class="sobre-cv contenedor">
-				<a class="btn btn-relleno" href={artista.cvUrl}>
-					Descargar CV
+	{/* ——— 6. Cierre ——— */}
+	<section class="sobre-cierre ctx-azul ctx-azul--profundo textura" aria-labelledby="cierre-titulo">
+		<div class:list={['sobre-cierre__grilla contenedor', artista?.fotoCierre && 'sobre-cierre__grilla--foto']}>
+			{
+				artista?.fotoCierre && (
+					<figure class="sobre-cierre__foto">
+						<img
+							src={artista.fotoCierre.src}
+							srcset={artista.fotoCierre.srcset}
+							sizes="(min-width: 64rem) 24rem, 80vw"
+							alt={artista.fotoCierre.alt || ''}
+							width={artista.fotoCierre.ancho}
+							height={artista.fotoCierre.alto}
+							loading="lazy"
+							decoding="async"
+						/>
+					</figure>
+				)
+			}
+		<div class="sobre-cierre__inner">
+			<h2 id="cierre-titulo" class="sobre-cierre__titulo">¿Una muestra, una charla o un taller?</h2>
+			<p class="sobre-cierre__texto">Escribile a Celia para proyectos, exhibiciones, adquisiciones o actividades.</p>
+			<div class="sobre-cierre__botones">
+				<a class="btn sobre-cierre__btn sobre-cierre__btn--relleno" href={rutas.contacto}>
+					Contactar
+					<Flecha />
 				</a>
-			</p>
-		)
-	}
+				{artista?.cvUrl && (
+					<a class="btn sobre-cierre__btn sobre-cierre__btn--contorno" href={artista.cvUrl}>
+						Descargar CV
+					</a>
+				)}
+			</div>
+		</div>
+		</div>
+	</section>
 </article>
 
 <style>
-	.sobre {
-		padding-bottom: clamp(3rem, 6vw, 5rem);
+	/* ——— Comunes ——— */
+	.sobre-etiqueta {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro);
 	}
 
-	.sobre-presentacion {
-		display: grid;
-		gap: 1.5rem;
-		align-items: end;
-		padding-top: clamp(2.5rem, 6vw, 4.5rem);
+	.sobre-etiqueta--dorada {
+		color: var(--dorado);
 	}
 
-	.sobre-presentacion__foto {
-		margin: 0;
-		width: min(100%, 16rem);
-	}
-
-	.sobre-presentacion__foto img {
-		display: block;
-		width: 100%;
-		height: auto;
-	}
-
-	.sobre-presentacion__texto {
-		display: grid;
-		justify-items: start;
-		gap: 0.75rem;
-	}
-
-	.sobre-presentacion__corta {
-		max-width: 36rem;
-	}
-
-	.sobre-bio,
-	.sobre-statement,
-	.sobre-trayectoria {
-		padding-top: clamp(2.5rem, 5vw, 4rem);
+	.sobre-titulo {
+		margin-top: 0.9rem;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2.1rem, 1.4rem + 2.2vw, 3.25rem);
+		line-height: 1.05;
+		color: var(--tinta);
+		text-wrap: balance;
 	}
 
 	.sobre-lectura {
-		max-width: 40rem;
 		display: grid;
-		gap: 1rem;
+		gap: 1.1rem;
+		max-width: 38rem;
 	}
 
 	.sobre-lectura :global(p) {
 		font-family: var(--font-body);
-		font-size: var(--tipo-cuerpo);
-		line-height: 1.7;
+		font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.15rem);
+		line-height: 1.75;
+		color: color-mix(in srgb, var(--tinta) 88%, transparent);
 	}
 
-	.sobre-statement {
+	/* Letra capitular en la primera línea de la biografía. */
+	.sobre-lectura--capitular :global(p:first-child::first-letter) {
+		float: left;
+		margin: 0.35rem 0.6rem 0 0;
+		font-family: var(--font-display);
+		font-size: 4.2rem;
+		line-height: 0.8;
+		color: var(--azul-profundo);
+	}
+
+	/* ——— 1. Banda azul ——— */
+	.sobre-hero {
+		padding-top: 6.5rem;
+		padding-bottom: clamp(3rem, 6vw, 5rem);
+	}
+
+	.sobre-hero__inner {
+		display: grid;
+		gap: 2.5rem;
+	}
+
+	.sobre-hero__texto {
 		display: grid;
 		justify-items: start;
-		gap: 1.25rem;
+		align-content: center;
+		gap: 1rem;
 	}
 
-	.sobre-statement__frase {
-		max-width: 18em;
+	.sobre-hero__nombre {
 		font-family: var(--font-display);
-		font-size: clamp(2rem, 4vw, 3.25rem);
+		font-weight: 400;
+		font-size: clamp(3rem, 1.8rem + 5vw, 6.25rem);
+		line-height: 0.95;
+		color: var(--blanco-calido);
+		text-wrap: balance;
+	}
+
+	.sobre-hero__subtitulo {
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
 		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--azul-bruma);
+	}
+
+	.sobre-hero__corta {
+		max-width: 34rem;
+		font-family: var(--font-body);
+		font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.2rem);
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--blanco-calido) 88%, transparent);
+	}
+
+	.sobre-hero__datos {
+		display: grid;
+		gap: 1rem;
+		width: 100%;
+		max-width: 40rem;
+		margin: 1rem 0 0;
+	}
+
+	.sobre-hero__datos div {
+		padding-top: 0.9rem;
+		border-top: 1px solid rgb(212 161 78 / 0.35);
+	}
+
+	.sobre-hero__datos dt {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado);
+	}
+
+	.sobre-hero__datos dd {
+		margin: 0.35rem 0 0;
+		font-family: var(--font-body);
+		font-size: 0.975rem;
+		line-height: 1.45;
+		color: var(--blanco-calido);
+	}
+
+	/* Retrato con un filete dorado corrido detrás. */
+	.sobre-hero__foto {
+		position: relative;
+		width: calc(100% - 1rem);
+		max-width: 26rem;
+		margin: 0;
+		isolation: isolate;
+	}
+
+	.sobre-hero__foto::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 1px solid var(--dorado);
+		transform: translate(1rem, 1rem);
+	}
+
+	.sobre-hero__foto img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 3 / 4;
+		object-fit: cover;
+		box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
+	}
+
+	/* ——— 2. Frase ——— */
+	.sobre-frase {
+		position: relative;
+		display: grid;
+		align-items: center;
+		min-height: clamp(26rem, 70vh, 40rem);
+		overflow: hidden;
+		background-color: var(--tinta);
+		isolation: isolate;
+	}
+
+	.sobre-frase__fondo {
+		position: absolute;
+		inset: 0;
+		z-index: -2;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 55% 45%;
+	}
+
+	/* Velo oscuro para que la frase se lea; deja ver los materiales. */
+	.sobre-frase::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: linear-gradient(90deg, rgb(12 30 42 / 0.82) 0%, rgb(12 30 42 / 0.55) 55%, rgb(12 30 42 / 0.25) 100%);
+	}
+
+	.sobre-frase__cita {
+		margin: 0;
+		padding-block: 4rem;
+	}
+
+	.sobre-frase__cita p {
+		max-width: 16em;
+		font-family: var(--font-display);
 		font-style: italic;
+		font-weight: 400;
+		font-size: clamp(2rem, 1.2rem + 3.4vw, 4rem);
 		line-height: 1.12;
+		color: var(--blanco-calido);
+		text-wrap: balance;
+	}
+
+	.sobre-frase__cita footer {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 1.75rem;
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado);
+	}
+
+	.sobre-frase__cita footer::before {
+		content: '';
+		width: 3rem;
+		height: 1px;
+		background-color: var(--dorado);
+	}
+
+	/* ——— 3. Biografía ——— */
+	.sobre-bio {
+		padding-block: clamp(4rem, 8vw, 7rem);
+	}
+
+	.sobre-bio__inner {
+		display: grid;
+		gap: 2.5rem;
+	}
+
+	.sobre-bio__foto {
+		margin: 0;
+	}
+
+	.sobre-bio__foto img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+	}
+
+	.sobre-bio__texto .sobre-lectura {
+		margin-top: 2rem;
+	}
+
+	/* ——— 4. Statement ——— */
+	.sobre-statement {
+		padding-block: clamp(4rem, 8vw, 7rem);
+		background-color: var(--marfil);
+		background-image: var(--textura-pigmento);
+		background-size: 720px 720px;
+		background-blend-mode: soft-light;
+	}
+
+	.sobre-statement__inner {
+		display: grid;
+		gap: 2rem;
+	}
+
+	/* La primera oración del statement, más grande. */
+	.sobre-statement__texto :global(p:first-child) {
+		font-family: var(--font-display);
+		font-size: clamp(1.4rem, 1.1rem + 0.9vw, 1.8rem);
+		font-style: italic;
+		line-height: 1.4;
+		color: var(--azul-profundo);
+	}
+
+	.sobre-statement__foto {
+		position: relative;
+		width: calc(100% - 0.9rem);
+		max-width: 24rem;
+		margin: 2rem 0 0.9rem;
+		isolation: isolate;
+	}
+
+	.sobre-statement__foto::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 1px solid var(--dorado);
+		transform: translate(0.9rem, 0.9rem);
+	}
+
+	.sobre-statement__foto img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+	}
+
+	/* ——— 5. Trayectoria ——— */
+	.sobre-trayectoria {
+		padding-block: clamp(4rem, 8vw, 7rem);
+	}
+
+	.sobre-cifras {
+		display: grid;
+		gap: 1.5rem;
+		margin: 2.5rem 0 3.5rem;
+		padding: 0;
+		list-style: none;
+	}
+
+	.sobre-cifras li {
+		display: grid;
+		gap: 0.35rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--dorado);
+	}
+
+	.sobre-cifras__numero {
+		font-family: var(--font-display);
+		font-size: clamp(3rem, 2rem + 3vw, 4.5rem);
+		line-height: 1;
+		color: var(--azul-profundo);
+	}
+
+	.sobre-cifras__texto {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 65%, transparent);
 	}
 
 	.cronologia {
 		display: grid;
-		gap: 2.5rem;
-		margin-top: 1.75rem;
+		gap: 3rem;
 	}
 
 	.cronologia__titulo {
-		margin-bottom: 1rem;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.25rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
 		font-family: var(--font-ui);
 		font-size: 0.75rem;
 		font-weight: 500;
@@ -192,139 +604,264 @@ const visibles = 4
 		color: var(--azul-medio);
 	}
 
+	.cronologia__titulo span {
+		color: var(--dorado-oscuro);
+	}
+
 	.cronologia__lista {
 		display: grid;
-		gap: 1.15rem;
+		gap: 1.25rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
-		border-left: 1px solid var(--color-line);
 	}
 
 	.cronologia__lista li {
 		display: grid;
-		gap: 0.2rem;
-		padding-left: 1rem;
+		grid-template-columns: 5.5rem minmax(0, 1fr);
+		column-gap: 1rem;
 	}
 
 	.cronologia__periodo {
-		color: var(--gris);
+		grid-column: 1;
+		padding-top: 0.3rem;
+		color: var(--dorado-oscuro);
 		font-family: var(--font-ui);
 		font-size: 0.75rem;
 		font-weight: 500;
-		letter-spacing: 0.12em;
+		letter-spacing: 0.08em;
+	}
+
+	.cronologia__hecho,
+	.cronologia__detalle {
+		grid-column: 2;
 	}
 
 	.cronologia__hecho {
 		font-family: var(--font-display);
-		font-size: 1.35rem;
-		line-height: 1.2;
+		font-size: 1.3rem;
+		line-height: 1.25;
+		color: var(--tinta);
 	}
 
 	.cronologia__detalle {
-		max-width: 38rem;
-		color: var(--tinta);
+		margin-top: 0.2rem;
+		color: color-mix(in srgb, var(--tinta) 75%, transparent);
 		font-family: var(--font-body);
 		font-size: 0.9375rem;
 		line-height: 1.55;
 	}
 
 	.cronologia__mas {
-		margin-top: 0.75rem;
-	}
-
-	.cronologia__mas summary {
-		cursor: pointer;
-		color: var(--azul-medio);
-		font-family: var(--font-ui);
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-	}
-
-	.cronologia__mas .cronologia__lista {
 		margin-top: 1rem;
 	}
 
-	.sobre-cv {
-		padding-top: 2.5rem;
+	.cronologia__mas summary {
+		width: fit-content;
+		padding-bottom: 0.2rem;
+		border-bottom: 1px solid var(--dorado);
+		cursor: pointer;
+		color: var(--azul-profundo);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		list-style: none;
 	}
 
-	/* En celulares el retrato ocupa todo el ancho. */
-	@media (max-width: 47.99rem) {
-		.sobre-presentacion__foto {
-			width: 100%;
+	.cronologia__mas summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.cronologia__mas[open] summary {
+		display: none;
+	}
+
+	.cronologia__mas .cronologia__lista {
+		margin-top: 1.25rem;
+	}
+
+	/* ——— 6. Cierre ——— */
+	.sobre-cierre {
+		padding-block: clamp(3.5rem, 7vw, 5.5rem);
+	}
+
+	.sobre-cierre__grilla {
+		display: grid;
+		gap: 2.5rem;
+	}
+
+	.sobre-cierre__inner {
+		display: grid;
+		justify-items: center;
+		gap: 1rem;
+		text-align: center;
+	}
+
+	/* Foto redonda-ovalada, como un retrato de despedida. */
+	.sobre-cierre__foto {
+		justify-self: center;
+		width: min(70%, 18rem);
+		margin: 0;
+	}
+
+	.sobre-cierre__foto img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		object-position: 30% 35%;
+		border-radius: 50% / 40%;
+		outline: 1px solid rgb(212 161 78 / 0.5);
+		outline-offset: 0.6rem;
+	}
+
+	.sobre-cierre__titulo {
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2rem, 1.3rem + 2.4vw, 3.25rem);
+		line-height: 1.05;
+		color: var(--blanco-calido);
+		text-wrap: balance;
+	}
+
+	.sobre-cierre__texto {
+		max-width: 32rem;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.65;
+		color: color-mix(in srgb, var(--blanco-calido) 85%, transparent);
+	}
+
+	.sobre-cierre__botones {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.85rem;
+		margin-top: 1rem;
+	}
+
+	.sobre-cierre__btn {
+		min-height: 3rem;
+		padding-inline: 1.6rem;
+	}
+
+	.sobre-cierre__btn--relleno {
+		border-color: var(--blanco-calido);
+		background-color: var(--blanco-calido);
+		color: var(--azul-profundo);
+	}
+
+	.sobre-cierre__btn--relleno:hover,
+	.sobre-cierre__btn--relleno:focus-visible {
+		border-color: var(--marfil);
+		background-color: var(--marfil);
+	}
+
+	.sobre-cierre__btn--contorno {
+		border-color: color-mix(in srgb, var(--blanco-calido) 60%, transparent);
+		color: var(--blanco-calido);
+	}
+
+	/* ——— Tablet ——— */
+	@media (min-width: 40rem) {
+		.sobre-hero__datos,
+		.sobre-cifras {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
 
-	@media (min-width: 48rem) and (max-width: 63.99rem) {
-		.sobre-presentacion__foto {
-			width: min(100%, 22rem);
-		}
-	}
-
-	/* Desktop: diseño editorial a dos columnas. Títulos a la izquierda (columnas 1–4),
-	   lectura a la derecha (5–12): la página usa todo el ancho sin estirar las líneas de texto. */
+	/* ——— Escritorio ——— */
 	@media (min-width: 64rem) {
-		.sobre-presentacion {
-			grid-template-columns: repeat(12, minmax(0, 1fr));
-			column-gap: var(--col-gap);
+		.sobre-hero {
+			padding-top: 9rem;
+		}
+
+		.sobre-hero__inner {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 			align-items: center;
+			gap: clamp(3rem, 6vw, 6rem);
 		}
 
-		.sobre-presentacion__foto {
-			grid-column: 1 / 6;
-			width: 100%;
+		.sobre-hero__foto {
+			justify-self: end;
 		}
 
-		.sobre-presentacion__texto {
-			grid-column: 7 / 13;
-		}
-
-		.sobre-presentacion__corta {
-			font-size: 1.125rem;
-		}
-
-		.sobre-bloque {
-			display: grid;
-			grid-template-columns: repeat(12, minmax(0, 1fr));
-			column-gap: var(--col-gap);
+		.sobre-bio__inner {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 			align-items: start;
+			gap: clamp(3rem, 7vw, 7rem);
 		}
 
-		.sobre-bloque__titulo {
-			grid-column: 1 / 5;
+		/* La foto queda fija mientras se lee la biografía. */
+		.sobre-bio__foto {
 			position: sticky;
 			top: 7rem;
 		}
 
-		.sobre-bloque__cuerpo {
-			grid-column: 5 / 12;
-			margin-top: 0;
+		.sobre-statement__inner {
+			grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+			align-items: start;
+			gap: clamp(3rem, 6vw, 6rem);
 		}
 
-		.sobre-statement {
-			grid-template-columns: repeat(12, minmax(0, 1fr));
-			column-gap: var(--col-gap);
-			justify-items: stretch;
+		.sobre-statement__encabezado {
+			position: sticky;
+			top: 7rem;
 		}
 
-		.sobre-statement__frase {
-			grid-column: 1 / 11;
+		.sobre-cierre__grilla--foto {
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: center;
+			gap: clamp(3rem, 7vw, 6rem);
+			max-width: 60rem;
 		}
 
-		.sobre-statement .filete {
-			grid-column: 1 / 3;
+		.sobre-cierre__grilla--foto .sobre-cierre__foto {
+			width: 18rem;
 		}
 
-		.sobre-statement__texto {
-			grid-column: 5 / 12;
+		.sobre-cierre__grilla--foto .sobre-cierre__inner {
+			justify-items: start;
+			text-align: left;
 		}
 
-		.sobre-trayectoria .cronologia {
+		.sobre-cierre__grilla--foto .sobre-cierre__botones {
+			justify-content: flex-start;
+		}
+
+		.cronologia {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			column-gap: var(--col-gap);
+			gap: 3.5rem clamp(3rem, 6vw, 6rem);
+		}
+	}
+
+	/* ——— Celular ——— */
+	@media (max-width: 39.99rem) {
+		.sobre-frase::after {
+			background: linear-gradient(0deg, rgb(12 30 42 / 0.85) 0%, rgb(12 30 42 / 0.55) 100%);
+		}
+
+		.cronologia__lista li {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.cronologia__periodo,
+		.cronologia__hecho,
+		.cronologia__detalle {
+			grid-column: 1;
+		}
+
+		.cronologia__periodo {
+			padding-top: 0;
+		}
+
+		.sobre-cierre__botones {
+			flex-direction: column;
+			align-items: stretch;
+			width: 100%;
 		}
 	}
 </style>

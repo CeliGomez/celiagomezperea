@@ -8,6 +8,14 @@ const { artista, configuracion, bajada, imagen, proyectos } = await fetchAudiovi
 const titulo = artista?.nombre ? `Audiovisual — ${artista.nombre}` : 'Audiovisual'
 const vimeo = configuracion?.vimeo || ''
 const ogImage = imagenDisponible(imagen) ? urlFor(imagen).width(1200).url() : undefined
+// Foto chica de Celia en la banda azul.
+const foto = imagenDisponible(imagen)
+	? {
+			src: urlFor(imagen).width(640).url(),
+			srcset: `${urlFor(imagen).width(400).url()} 400w, ${urlFor(imagen).width(800).url()} 800w`,
+			alt: imagen.alt || '',
+		}
+	: null
 
 // El destacado va grande arriba; el resto se agrupa por tipo (en el orden en que aparece cada tipo).
 const destacado = proyectos.find((proyecto) => proyecto.destacado) || proyectos[0] || null
@@ -62,6 +70,7 @@ const fichas =
 		bajada={bajada}
 		fichas={fichas}
 		cuantas={proyectos.length ? `${proyectos.length} videos` : ''}
+		imagen={foto}
 	/>
 
 	{

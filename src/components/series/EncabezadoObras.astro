@@ -3,17 +3,35 @@
 	Encabezado de Cuadros e Ilustraciones: banda azul con la etiqueta, el título, la explicación
 	y las obras como fichas para elegir (llevan a cada una dentro de la página).
 	fichas: [{ href, numero, nombre, cantidad }]. Con menos de dos fichas no se muestran.
+	imagen (opcional): { src, srcset, alt }. Foto chica a la derecha del título (Audiovisual),
+	enmarcada con un filete dorado. En celular va debajo de la bajada, apaisada.
 */
-const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '' } = Astro.props
+const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '', imagen = null } = Astro.props
 ---
 
 <header class="encabezado-obras__encabezado ctx-azul ctx-azul--profundo textura">
 	<div class="contenedor">
-		<div class="encabezado-obras__titulos">
-			{etiqueta && <p class="encabezado-obras__etiqueta">{etiqueta}</p>}
-			<h1 class="encabezado-obras__titulo">{titulo}</h1>
-			<span class="filete filete--largo" aria-hidden="true" />
-			{bajada && <p class="encabezado-obras__bajada">{bajada}</p>}
+		<div class:list={['encabezado-obras__arriba', imagen?.src && 'encabezado-obras__arriba--foto']}>
+			<div class="encabezado-obras__titulos">
+				{etiqueta && <p class="encabezado-obras__etiqueta">{etiqueta}</p>}
+				<h1 class="encabezado-obras__titulo">{titulo}</h1>
+				<span class="filete filete--largo" aria-hidden="true" />
+				{bajada && <p class="encabezado-obras__bajada">{bajada}</p>}
+			</div>
+			{
+				imagen?.src && (
+					<figure class="encabezado-obras__foto">
+						<img
+							src={imagen.src}
+							srcset={imagen.srcset || undefined}
+							sizes="(min-width: 64rem) 20rem, 100vw"
+							alt={imagen.alt || ''}
+							loading="eager"
+							decoding="async"
+						/>
+					</figure>
+				)
+			}
 		</div>
 
 		{
@@ -41,6 +59,37 @@ const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '' } = A
 	.encabezado-obras__encabezado {
 		padding-top: 7.5rem;
 		padding-bottom: clamp(3rem, 6vw, 4.5rem);
+	}
+
+	.encabezado-obras__arriba--foto {
+		display: grid;
+		gap: 2rem;
+	}
+
+	/* Foto chica enmarcada, con el filete dorado corrido detrás. */
+	.encabezado-obras__foto {
+		position: relative;
+		width: calc(100% - 0.75rem);
+		margin: 0;
+		isolation: isolate;
+	}
+
+	.encabezado-obras__foto::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 1px solid rgb(212 161 78 / 0.6);
+		transform: translate(0.75rem, 0.75rem);
+	}
+
+	.encabezado-obras__foto img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		object-fit: cover;
+		object-position: 50% 18%;
+		box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.6);
 	}
 
 	.encabezado-obras__titulos {
@@ -177,6 +226,16 @@ const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '' } = A
 	@media (min-width: 64rem) {
 		.encabezado-obras__encabezado {
 			padding-top: 9.5rem;
+		}
+
+		.encabezado-obras__arriba--foto {
+			grid-template-columns: minmax(0, 1fr) 19rem;
+			align-items: center;
+			gap: clamp(3rem, 6vw, 6rem);
+		}
+
+		.encabezado-obras__foto img {
+			aspect-ratio: 3 / 4;
 		}
 
 		.encabezado-obras__fichas ol {

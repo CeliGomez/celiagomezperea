@@ -435,21 +435,66 @@ export const artista = {
 	heroAudiovisual: {
 		bajada:
 			'Videoperformance, videoinstalación y registro de acciones en el territorio. El cuerpo, el paisaje y el movimiento, en imagen y sonido.',
-		imagen: foto(
-			'celia-proceso-cine.webp',
-			1600,
-			686,
-			'Registro de proceso: un hilo de pintura negra cae sobre el piso cubierto de trazos.',
-		),
+		// Foto chica, a la derecha de la banda azul de Audiovisual.
+		imagen: {
+			...foto(
+				'celia-cables.webp',
+				960,
+				1280,
+				'Celia Gómez Perea sentada en el piso del taller, ordenando cables de proyección.',
+			),
+			hotspot: { x: 0.45, y: 0.4, width: 1, height: 1 },
+		},
 	},
+	// Página La artista: retrato de arriba (riéndose junto a la caja de herramientas naranja).
 	retrato: {
 		...foto(
-			'celia-taller.webp',
-			1066,
-			1421,
-			'Celia Gómez Perea trabajando con pincel y tinta negra sobre una superficie blanca.',
+			'celia-retrato-risa.webp',
+			960,
+			1280,
+			'Celia Gómez Perea riéndose, sentada en el piso de su taller junto a una caja de herramientas naranja abierta.',
 		),
-		hotspot: { x: 0.5, y: 0.42, width: 1, height: 1 },
+		hotspot: { x: 0.5, y: 0.4, width: 1, height: 1 },
+	},
+	// Página La artista: foto junto a la biografía (sentada frente a dos cuadros grandes).
+	fotoBio: {
+		...foto(
+			'celia-taller-lienzos.webp',
+			960,
+			1280,
+			'Celia Gómez Perea sentada en el piso del taller, frente a dos cuadros de gran formato y una pared violeta.',
+		),
+		hotspot: { x: 0.6, y: 0.5, width: 1, height: 1 },
+	},
+	// Página La artista: foto junto al statement (sentada en la silla turquesa, mirando a cámara).
+	fotoStatement: {
+		...foto(
+			'celia-silla-turquesa.webp',
+			960,
+			1280,
+			'Celia Gómez Perea sentada en una silla turquesa, con la mano en el mentón, frente a sus cuadros y una pared violeta.',
+		),
+		hotspot: { x: 0.5, y: 0.45, width: 1, height: 1 },
+	},
+	// Página La artista: foto del cierre (con una caja de pasteles, mirando hacia un costado).
+	fotoCierre: {
+		...foto(
+			'celia-pasteles.webp',
+			960,
+			1280,
+			'Celia Gómez Perea sonriendo, con una caja de pasteles abierta sobre su caja de herramientas naranja.',
+		),
+		hotspot: { x: 0.4, y: 0.35, width: 1, height: 1 },
+	},
+	// Página La artista: fondo de la franja de la frase (materiales de trabajo sobre el piso).
+	fondoFrase: {
+		...foto(
+			'celia-materiales.webp',
+			960,
+			1280,
+			'Materiales de trabajo sobre el piso del taller: un dibujo en tinta, reglas plegables, espátulas y una engrapadora naranja.',
+		),
+		hotspot: { x: 0.55, y: 0.5, width: 1, height: 1 },
 	},
 	// Foto de la sección «Sobre la artista» del Inicio (va justo después del hero).
 	// La página La artista sigue usando «retrato».

@@ -1037,6 +1037,11 @@ function armarSobreMi(artista, configuracion) {
 			grupos,
 			cvUrl: artista?.cv?.asset?.url || '',
 			retrato: fotoRecorte(artista?.retrato, 900, 1200),
+			fotoBio: fotoRecorte(artista?.fotoBio, 900, 1200),
+			fotoStatement: fotoRecorte(artista?.fotoStatement, 900, 1200),
+			fotoCierre: fotoRecorte(artista?.fotoCierre, 900, 1200),
+			fondoFrase: fotoRecorte(artista?.fondoFrase, 1800, 1100),
+			datos: Array.isArray(artista?.datosInicio) ? artista.datosInicio : [],
 		},
 		contacto: {
 			...datosContacto(configuracion),
