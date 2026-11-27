@@ -838,6 +838,32 @@ const cifras = [
 		}
 	}
 
+	/* ——— Celular y tablet: la foto va justo debajo del nombre, antes de la bio corta ——— */
+	@media (max-width: 63.99rem) {
+		.sobre-hero__inner {
+			justify-items: start;
+			gap: 1rem;
+		}
+
+		.sobre-hero__texto {
+			display: contents;
+		}
+
+		.sobre-hero__texto > :global(*) {
+			order: 1;
+		}
+
+		.sobre-hero__foto {
+			order: 2;
+			margin-block: 1.25rem 2rem;
+		}
+
+		.sobre-hero__corta,
+		.sobre-hero__datos {
+			order: 3;
+		}
+	}
+
 	/* ——— Celular ——— */
 	@media (max-width: 39.99rem) {
 		.sobre-frase::after {
