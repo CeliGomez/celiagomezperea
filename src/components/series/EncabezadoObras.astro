@@ -24,7 +24,7 @@ const { etiqueta = '', titulo = '', bajada = '', fichas = [], cuantas = '' } = A
 						{fichas.map((ficha) => (
 							<li>
 								<a href={ficha.href}>
-									<span class="encabezado-obras__ficha-numero">{ficha.numero}</span>
+									{ficha.numero && <span class="encabezado-obras__ficha-numero">{ficha.numero}</span>}
 									<span class="encabezado-obras__ficha-nombre">{ficha.nombre}</span>
 									{ficha.cantidad && <span class="encabezado-obras__ficha-cantidad">{ficha.cantidad}</span>}
 								</a>

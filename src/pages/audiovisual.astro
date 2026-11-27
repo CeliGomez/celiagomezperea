@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import Hero from '../components/audiovisual/Hero.astro'
+import EncabezadoObras from '../components/series/EncabezadoObras.astro'
 import Listado from '../components/audiovisual/Listado.jsx'
 import { fetchAudiovisual, imagenDisponible, urlFor } from '../lib/sanity.js'
 
@@ -8,6 +8,38 @@ const { artista, configuracion, bajada, imagen, proyectos } = await fetchAudiovi
 const titulo = artista?.nombre ? `Audiovisual — ${artista.nombre}` : 'Audiovisual'
 const vimeo = configuracion?.vimeo || ''
 const ogImage = imagenDisponible(imagen) ? urlFor(imagen).width(1200).url() : undefined
+
+// El destacado va grande arriba; el resto se agrupa por tipo (en el orden en que aparece cada tipo).
+const destacado = proyectos.find((proyecto) => proyecto.destacado) || proyectos[0] || null
+const resto = proyectos.filter((proyecto) => proyecto !== destacado)
+const slug = (texto) =>
+	'videos-' +
+	texto
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[̀-ͯ]/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '')
+const porTipo = new Map()
+for (const proyecto of resto) {
+	const nombre = proyecto.categoria || 'Otros videos'
+	if (!porTipo.has(nombre)) porTipo.set(nombre, [])
+	porTipo.get(nombre).push(proyecto)
+}
+// «Otros videos» siempre al final.
+const grupos = [...porTipo.entries()]
+	.sort(([a], [b]) => (a === 'Otros videos') - (b === 'Otros videos'))
+	.map(([nombre, lista]) => ({ id: slug(nombre), nombre, proyectos: lista }))
+
+const fichas =
+	grupos.length > 1
+		? grupos.map((grupo) => ({
+				href: `#${grupo.id}`,
+				numero: '',
+				nombre: grupo.nombre,
+				cantidad: `${grupo.proyectos.length} ${grupo.proyectos.length === 1 ? 'video' : 'videos'}`,
+			}))
+		: []
 ---
 
 <Layout
@@ -22,27 +54,292 @@ const ogImage = imagenDisponible(imagen) ? urlFor(imagen).width(1200).url() : un
 	instagram={configuracion?.instagram}
 	vimeo={vimeo}
 	youtube={configuracion?.youtube}
+	heroAzul
 >
-	<Hero bajada={bajada} imagen={imagen} vimeo={vimeo} />
+	<EncabezadoObras
+		etiqueta="Videos · performance e instalación"
+		titulo="Audiovisual"
+		bajada={bajada}
+		fichas={fichas}
+		cuantas={proyectos.length ? `${proyectos.length} videos` : ''}
+	/>
+
 	{
 		proyectos.length > 0 ? (
-			<section class="av-cuerpo" aria-label="Proyectos">
-				<Listado client:visible proyectos={proyectos} />
-			</section>
+			<Listado client:visible destacado={destacado} grupos={grupos} />
 		) : (
-			<p class="av-vacio contenedor">Todavía no hay proyectos publicados.</p>
+			<p class="av-vacio contenedor">Todavía no hay videos publicados.</p>
+		)
+	}
+
+	{
+		vimeo && (
+			<p class="vt-perfil contenedor">
+				<a class="btn btn-contorno" href={vimeo} target="_blank" rel="noopener noreferrer">
+					Ver el canal completo en Vimeo
+				</a>
+			</p>
 		)
 	}
 </Layout>
 
-<style>
-	.av-cuerpo {
-		padding-bottom: clamp(3rem, 6vw, 5rem);
+<style is:global>
+	/* ——— Videoteca (Listado.jsx) ——— */
+	.av-vacio {
+		padding-block: 3rem;
+		color: var(--gris);
 	}
 
-	.av-vacio {
-		padding-top: 1.5rem;
-		padding-bottom: clamp(3rem, 6vw, 5rem);
-		color: var(--gris);
+	.vt-perfil {
+		display: flex;
+		justify-content: center;
+		padding-block: clamp(2.5rem, 5vw, 4rem);
+	}
+
+	/* Portada clickeable 16:9 con ▶ y la duración. */
+	.vt-portada {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		padding: 0;
+		overflow: hidden;
+		border: 0;
+		background-color: var(--azul-profundo);
+		cursor: pointer;
+	}
+
+	.vt-portada img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.8s var(--ease);
+	}
+
+	.vt-portada__play {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: grid;
+		place-items: center;
+		width: 3.75rem;
+		height: 3.75rem;
+		border: 1px solid rgb(255 255 255 / 0.7);
+		border-radius: 50%;
+		background-color: rgb(18 57 79 / 0.55);
+		color: var(--blanco-calido);
+		transform: translate(-50%, -50%);
+		backdrop-filter: blur(4px);
+		transition:
+			background-color 0.3s var(--ease),
+			transform 0.3s var(--ease);
+	}
+
+	.vt-portada__play svg {
+		width: 1.25rem;
+		height: 1.25rem;
+		margin-left: 0.15rem;
+		fill: currentColor;
+	}
+
+	.vt-portada__duracion {
+		position: absolute;
+		right: 0.75rem;
+		bottom: 0.75rem;
+		padding: 0.2rem 0.5rem;
+		background-color: rgb(10 20 30 / 0.7);
+		color: var(--blanco-calido);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+	}
+
+	.vt-portada:focus-visible {
+		outline: 2px solid var(--dorado);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.vt-portada:hover img {
+			transform: scale(1.04);
+		}
+
+		.vt-portada:hover .vt-portada__play {
+			background-color: var(--dorado);
+			transform: translate(-50%, -50%) scale(1.06);
+		}
+	}
+
+	/* Destacado */
+	.vt-destacado {
+		padding-block: clamp(3.5rem, 7vw, 6rem);
+		background-color: var(--marfil);
+	}
+
+	.vt-destacado__inner {
+		display: grid;
+		gap: 2rem;
+	}
+
+	.vt-destacado .vt-portada__play {
+		width: 5rem;
+		height: 5rem;
+	}
+
+	.vt-etiqueta {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro);
+	}
+
+	.vt-etiqueta__filete {
+		display: block;
+		width: 3rem;
+		height: 1px;
+		background-color: var(--dorado);
+	}
+
+	.vt-destacado__titulo {
+		margin-top: 1rem;
+		font-family: var(--font-display);
+		font-size: clamp(2.25rem, 1.4rem + 2.6vw, 3.5rem);
+		font-weight: 400;
+		line-height: 1.02;
+		color: var(--tinta);
+		text-wrap: balance;
+	}
+
+	.vt-destacado__datos {
+		margin-top: 0.9rem;
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+	}
+
+	.vt-destacado__desc {
+		display: -webkit-box;
+		max-width: 30rem;
+		margin-top: 1.1rem;
+		overflow: hidden;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--tinta) 82%, transparent);
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+		line-clamp: 4;
+	}
+
+	.vt-destacado__btn {
+		gap: 0.6rem;
+		margin-top: 1.75rem;
+	}
+
+	/* Grupos por tipo */
+	.vt-grupo {
+		padding-block: clamp(3.5rem, 7vw, 6rem);
+		scroll-margin-top: 4rem;
+	}
+
+	.vt-grupo--crema {
+		background-color: var(--marfil);
+	}
+
+	.vt-grupo__encabezado {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem 2rem;
+		margin-bottom: clamp(2rem, 4vw, 3rem);
+		padding-bottom: 1.25rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.vt-grupo__titulo {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+		font-weight: 400;
+		line-height: 1.05;
+		color: var(--tinta);
+	}
+
+	.vt-grupo__cantidad {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+	}
+
+	.vt-grilla {
+		display: grid;
+		gap: 2.5rem 2rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.vt-tarjeta__pie {
+		display: grid;
+		gap: 0.35rem;
+		padding-top: 1rem;
+	}
+
+	.vt-tarjeta__titulo {
+		font-family: var(--font-display);
+		font-size: 1.45rem;
+		font-style: italic;
+		font-weight: 400;
+		line-height: 1.15;
+		color: var(--tinta);
+	}
+
+	.vt-tarjeta__datos {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+	}
+
+	@media (min-width: 40rem) {
+		.vt-grilla {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 64rem) {
+		.vt-destacado__inner {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+			align-items: center;
+			gap: clamp(3rem, 5vw, 5rem);
+		}
+
+		.vt-grilla {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 3.5rem 2.5rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.vt-portada img,
+		.vt-portada__play {
+			transition: none;
+		}
 	}
 </style>

@@ -1,0 +1,182 @@
+---
+import ObraPlaceholder from '../obras/ObraPlaceholder.astro'
+import { rutaObra } from '../../lib/rutas.js'
+
+/*
+	Cuadros (o ilustraciones) dentro de la página de una obra.
+	- Todas las fotos en un recuadro de la misma altura, apoyadas sobre una misma línea,
+	  así verticales y horizontales quedan alineadas.
+	- Arriba de cada título va su número dentro de la obra (N.º 1, N.º 2…).
+	  Si la pieza no tiene título, se muestra «Sin título».
+	obras: salida de fetchSerie().obras.
+*/
+const { obras = [], papel = false } = Astro.props
+const numero = (obra, indice) => indice + 1
+---
+
+{
+	obras.length > 0 && (
+		<ol class:list={['piezas', papel && 'piezas--papel']}>
+			{obras.map((obra, indice) => (
+				<li>
+					<a class="pieza" href={rutaObra(obra.slug)}>
+						<span class="pieza__marco">
+							{obra.imagen ? (
+								<img
+									src={obra.imagen.src}
+									srcset={obra.imagen.srcset || undefined}
+									sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 46vw, 100vw"
+									alt={obra.imagen.alt || obra.titulo || `Pieza ${numero(obra, indice)}`}
+									width={obra.imagen.ancho}
+									height={obra.imagen.alto}
+									loading={indice < 3 ? 'eager' : 'lazy'}
+									decoding="async"
+								/>
+							) : (
+								<ObraPlaceholder ancho={obra.relacion?.ancho} alto={obra.relacion?.alto} proporcion="vertical" />
+							)}
+						</span>
+						<span class="pieza__pie">
+							<span class="pieza__numero">N.º {numero(obra, indice)}</span>
+							<span class="pieza__titulo">{obra.titulo || 'Sin título'}</span>
+							{(obra.anio || obra.medidas || obra.tecnica) && (
+								<span class="pieza__datos">{[obra.anio, obra.tecnica, obra.medidas].filter(Boolean).join(' · ')}</span>
+							)}
+						</span>
+					</a>
+				</li>
+			))}
+		</ol>
+	)
+}
+
+<style>
+	.piezas {
+		--alto-pieza: clamp(18rem, 62vw, 24rem);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 3rem 2rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.pieza {
+		display: grid;
+		gap: 1.25rem;
+		color: var(--tinta);
+		text-decoration: none;
+	}
+
+	/* Recuadro de altura fija: la foto entra entera, apoyada abajo. */
+	.pieza__marco {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		height: var(--alto-pieza);
+	}
+
+	.pieza__marco img {
+		display: block;
+		width: auto;
+		max-width: 100%;
+		height: auto;
+		max-height: 100%;
+		object-fit: contain;
+		filter: drop-shadow(0 16px 20px rgb(25 25 25 / 0.16));
+		transition:
+			transform 0.5s var(--ease),
+			filter 0.5s var(--ease);
+	}
+
+	.pieza__marco :global(.obra-pendiente) {
+		width: min(100%, 16rem);
+	}
+
+	.pieza__pie {
+		display: grid;
+		gap: 0.3rem;
+		padding-top: 1rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.pieza__numero {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro);
+	}
+
+	.pieza__titulo {
+		font-family: var(--font-display);
+		font-size: 1.45rem;
+		font-style: italic;
+		line-height: 1.15;
+		transition: color 0.3s var(--ease);
+	}
+
+	.pieza__datos {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
+	}
+
+	.pieza:focus-visible {
+		outline: 1px solid var(--dorado);
+		outline-offset: 6px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.pieza:hover .pieza__marco img {
+			transform: translateY(-4px);
+			filter: drop-shadow(0 24px 26px rgb(25 25 25 / 0.2));
+		}
+
+		.pieza:hover .pieza__titulo {
+			color: var(--azul-medio);
+		}
+	}
+
+	/* Celular: una por fila, la foto a todo el ancho y sin hueco arriba. */
+	@media (max-width: 39.99rem) {
+		.pieza__marco {
+			height: auto;
+		}
+
+		.pieza__marco img {
+			width: 100%;
+			max-height: 75svh;
+		}
+	}
+
+	@media (min-width: 40rem) {
+		.piezas {
+			--alto-pieza: clamp(18rem, 32vw, 24rem);
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 64rem) {
+		.piezas {
+			--alto-pieza: clamp(20rem, 24vw, 26rem);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 4rem 3rem;
+		}
+
+		.piezas--papel {
+			--alto-pieza: clamp(16rem, 18vw, 20rem);
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 3.5rem 2.5rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pieza__marco img,
+		.pieza__titulo {
+			transition: none;
+		}
+	}
+</style>

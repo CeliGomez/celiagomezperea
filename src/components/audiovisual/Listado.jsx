@@ -1,50 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import ModalVimeo from './ModalVimeo.jsx'
 import ObraPlaceholder from '../obras/ObraPlaceholder.jsx'
 
-const ETIQUETAS = {
-	videoensayo: 'Videoensayo',
-	registro: 'Registro',
-	proceso: 'Proceso',
-	instalacion: 'Instalación',
-}
+/*
+	Videoteca de Audiovisual.
+	- Arriba, el video destacado grande (franja crema).
+	- Después, los videos agrupados por tipo (Performance, Videoinstalación…), cada grupo en su franja,
+	  alternando blanco y crema como las obras de Cuadros. Los que no tienen tipo van a «Otros videos».
+	- Cada tarjeta: portada 16:9 con ▶ y la duración; abajo título, año y tipo. Al tocarla se abre el reproductor.
+	grupos: [{ id, nombre, proyectos }] (se arman en la página).
+*/
 
-function meta(proyecto) {
-	return [proyecto.anio, proyecto.duracion].filter(Boolean).join(' · ')
-}
-
-function opciones(proyectos) {
-	const vistas = []
-	const usadas = new Set()
-	for (const proyecto of proyectos) {
-		if (!proyecto.categoria || usadas.has(proyecto.categoria)) continue
-		usadas.add(proyecto.categoria)
-		vistas.push({
-			id: proyecto.categoria,
-			label: ETIQUETAS[proyecto.categoria] || proyecto.categoria,
-		})
-	}
-	if (vistas.length < 1) return []
-	return [{ id: 'todos', label: 'Todos' }, ...vistas]
-}
-
-function proporcion(proyecto) {
-	if (proyecto.ancho > 0 && proyecto.alto > 0) return `${proyecto.ancho} / ${proyecto.alto}`
-	return '3 / 2'
-}
-
-function Miniatura({ proyecto, onAbrir, sizes, prioridad = false }) {
+function Portada({ proyecto, onAbrir, sizes, prioridad = false }) {
 	const foto = proyecto.miniatura?.src ? proyecto.miniatura : proyecto.miniaturaUrl ? { src: proyecto.miniaturaUrl, alt: '' } : null
 	const [rota, setRota] = useState(false)
-	const alt = foto?.alt || proyecto.titulo || 'Video'
+	const titulo = proyecto.titulo || 'Sin título'
 	return (
-		<button type="button" className="av-mini" style={{ aspectRatio: proporcion(proyecto) }} aria-label={`Reproducir ${proyecto.titulo || 'video'}`} onClick={(event) => onAbrir(proyecto, event)}>
+		<button type="button" className="vt-portada" aria-label={`Reproducir ${titulo}`} onClick={(event) => onAbrir(proyecto, event)}>
 			{foto?.src && !rota ? (
 				<img
 					src={foto.src}
 					srcSet={foto.srcset || undefined}
 					sizes={sizes}
-					alt={alt}
+					alt=""
 					width={proyecto.ancho || 1280}
 					height={proyecto.alto || 720}
 					loading={prioridad ? 'eager' : 'lazy'}
@@ -53,54 +31,38 @@ function Miniatura({ proyecto, onAbrir, sizes, prioridad = false }) {
 					onError={() => setRota(true)}
 				/>
 			) : (
-				<ObraPlaceholder llenar pie proporcion={proyecto.alto > proyecto.ancho ? 'vertical' : 'horizontal'} titulo={proyecto.titulo} />
+				<ObraPlaceholder llenar pie proporcion="horizontal" titulo={titulo} />
 			)}
-			<span className="av-mini__play" aria-hidden="true">
-				▶
+			<span className="vt-portada__play" aria-hidden="true">
+				<svg viewBox="0 0 24 24">
+					<path d="M8 5.5v13l11-6.5z" />
+				</svg>
 			</span>
+			{proyecto.duracion && <span className="vt-portada__duracion">{proyecto.duracion}</span>}
 		</button>
 	)
 }
 
-function Ficha({ proyecto, onAbrir, destacado = false }) {
-	const linea = meta(proyecto)
+function datos(proyecto, conTipo = true) {
+	return [proyecto.anio, conTipo ? proyecto.categoria : '', proyecto.duracion].filter(Boolean).join(' · ')
+}
+
+function Tarjeta({ proyecto, onAbrir, conTipo }) {
+	const linea = [proyecto.anio, conTipo ? proyecto.categoria : ''].filter(Boolean).join(' · ')
 	return (
-		<article className={destacado ? 'av-destacado' : 'av-card'}>
-			<Miniatura
-				proyecto={proyecto}
-				onAbrir={onAbrir}
-				prioridad={destacado}
-				sizes={destacado ? '(min-width: 64rem) 58vw, 100vw' : '(min-width: 64rem) 28vw, 100vw'}
-			/>
-			<div className={destacado ? 'av-destacado__texto' : 'av-card__texto'}>
-				{destacado && <p className="label">Proyecto destacado</p>}
-				{destacado ? (
-					<h2 className="av-destacado__titulo">{proyecto.titulo}</h2>
-				) : (
-					<h3 className="av-card__titulo">{proyecto.titulo}</h3>
-				)}
-				{linea && <p className="av-card__meta">{linea}</p>}
-				{proyecto.descripcionCorta && <p className="av-card__desc">{proyecto.descripcionCorta}</p>}
-				<button type="button" className="btn btn-relleno" onClick={(event) => onAbrir(proyecto, event)}>
-					Ver video
-				</button>
+		<article className="vt-tarjeta">
+			<Portada proyecto={proyecto} onAbrir={onAbrir} sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 46vw, 100vw" />
+			<div className="vt-tarjeta__pie">
+				<h3 className="vt-tarjeta__titulo">{proyecto.titulo || 'Sin título'}</h3>
+				{linea && <p className="vt-tarjeta__datos">{linea}</p>}
 			</div>
 		</article>
 	)
 }
 
-export default function Listado({ proyectos = [] }) {
-	const tabs = opciones(proyectos)
-	const [filtro, setFiltro] = useState('todos')
+export default function Listado({ destacado = null, grupos = [] }) {
 	const [activo, setActivo] = useState(null)
 	const origen = useRef(null)
-	const lista = filtro === 'todos' ? proyectos : proyectos.filter((proyecto) => proyecto.categoria === filtro)
-	const destacado = lista.find((proyecto) => proyecto.destacado) || lista[0] || null
-	const resto = lista.filter((proyecto) => proyecto !== destacado)
-
-	useEffect(() => {
-		if (filtro !== 'todos' && !tabs.some((tab) => tab.id === filtro)) setFiltro('todos')
-	}, [filtro, tabs])
 
 	function abrir(proyecto, event) {
 		if (!proyecto?.vimeoId) return
@@ -113,29 +75,59 @@ export default function Listado({ proyectos = [] }) {
 		origen.current?.focus()
 	}
 
-	if (!proyectos.length) return null
+	const varios = grupos.length > 1
 
 	return (
-		<div className="av-listado contenedor">
-			{tabs.length > 1 && (
-				<div className="galeria-tabs" role="tablist" aria-label="Filtrar proyectos">
-					{tabs.map((tab) => (
-						<button key={tab.id} type="button" role="tab" className="galeria-tab" aria-selected={filtro === tab.id} onClick={() => setFiltro(tab.id)}>
-							{tab.label}
-						</button>
-					))}
-				</div>
+		<div className="videoteca">
+			{destacado && (
+				<section className="vt-destacado" aria-labelledby="vt-destacado-titulo">
+					<div className="vt-destacado__inner contenedor">
+						<Portada proyecto={destacado} onAbrir={abrir} prioridad sizes="(min-width: 64rem) 60vw, 100vw" />
+						<div className="vt-destacado__texto">
+							<p className="vt-etiqueta">
+								<span>Video destacado</span>
+								<span className="vt-etiqueta__filete" aria-hidden="true" />
+							</p>
+							<h2 id="vt-destacado-titulo" className="vt-destacado__titulo">
+								{destacado.titulo || 'Sin título'}
+							</h2>
+							{datos(destacado) && <p className="vt-destacado__datos">{datos(destacado)}</p>}
+							{destacado.descripcionCorta && <p className="vt-destacado__desc">{destacado.descripcionCorta}</p>}
+							<button type="button" className="btn btn-relleno vt-destacado__btn" onClick={(event) => abrir(destacado, event)}>
+								<span aria-hidden="true">▶</span> Ver video
+							</button>
+						</div>
+					</div>
+				</section>
 			)}
-			{destacado && <Ficha proyecto={destacado} onAbrir={abrir} destacado />}
-			{resto.length > 0 && (
-				<ul className="av-grilla">
-					{resto.map((proyecto) => (
-						<li key={proyecto.id}>
-							<Ficha proyecto={proyecto} onAbrir={abrir} />
-						</li>
-					))}
-				</ul>
-			)}
+
+			{grupos.map((grupo, indice) => (
+				<section
+					key={grupo.id}
+					id={grupo.id}
+					className={indice % 2 === 1 ? 'vt-grupo vt-grupo--crema' : 'vt-grupo'}
+					aria-labelledby={`${grupo.id}-titulo`}
+				>
+					<div className="contenedor">
+						<div className="vt-grupo__encabezado">
+							<h2 id={`${grupo.id}-titulo`} className="vt-grupo__titulo">
+								{varios ? grupo.nombre : 'Todos los videos'}
+							</h2>
+							<p className="vt-grupo__cantidad">
+								{grupo.proyectos.length} {grupo.proyectos.length === 1 ? 'video' : 'videos'}
+							</p>
+						</div>
+						<ul className="vt-grilla">
+							{grupo.proyectos.map((proyecto) => (
+								<li key={proyecto.id}>
+									<Tarjeta proyecto={proyecto} onAbrir={abrir} conTipo={!varios} />
+								</li>
+							))}
+						</ul>
+					</div>
+				</section>
+			))}
+
 			<ModalVimeo proyecto={activo} onCerrar={cerrar} />
 		</div>
 	)

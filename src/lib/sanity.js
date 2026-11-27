@@ -286,39 +286,64 @@ function duracionVimeo(segundos) {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
+// Nombre de Vimeo «limpio»: sin extensión de archivo; los nombres automáticos del celular, «Sin título».
+function tituloDeVimeo(titulo) {
+  const limpio = String(titulo || '')
+    .replace(/\.(mp4|mov|m4v|avi|mkv|webm)$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!limpio || /^(whatsapp|vid[-_ ]|img[-_ ]|video \d|pxl_|mvi_)/i.test(limpio)) return ''
+  return limpio
+}
+
 let videosDemo = null
 function proyectosDemo() {
   videosDemo ??= Promise.all(
-    (demo.videosVimeo || []).map(async (link, indice) => {
+    (demo.videosVimeo || []).map(async (item, indice) => {
+      const dato = typeof item === 'string' ? { link: item } : item || {}
+      // Se descarta lo que viene después del «?» (por ejemplo ?turnstile=…), salvo el hash ?h= de videos ocultos.
+      let link = String(dato.link || '').trim()
+      try {
+        const url = new URL(link)
+        const h = url.searchParams.get('h')
+        link = `${url.origin}${url.pathname}${h ? `?h=${h}` : ''}`
+      } catch {
+        return null
+      }
+      let datos = {}
       try {
         const respuesta = await fetch(
           `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(link)}&width=1920`,
         )
-        if (!respuesta.ok) return null
-        const datos = await respuesta.json()
-        if (!datos.title) return null
-        return {
-          _id: `vimeo-${datos.video_id || indice}`,
-          _type: 'proyectoAudiovisual',
-          titulo: datos.title,
-          anio: null,
-          duracion: duracionVimeo(datos.duration),
-          publicado: String(datos.upload_date || ''),
-          descripcionCorta: String(datos.description || '').trim(),
-          linkVimeo: link,
-          categoria: '',
-          ancho: Number(datos.width) || 0,
-          alto: Number(datos.height) || 0,
-          miniaturaUrl: datos.thumbnail_url || '',
-        }
+        if (respuesta.ok) datos = await respuesta.json()
       } catch {
-        return null
+        // Sin conexión con Vimeo: el video se muestra igual con lo que tenga cargado.
+      }
+      if (!datos.video_id && !dato.titulo) return null
+      return {
+        _id: `vimeo-${datos.video_id || datosVimeo(link).id || indice}`,
+        _type: 'proyectoAudiovisual',
+        titulo: String(dato.titulo || '').trim() || tituloDeVimeo(datos.title),
+        anio: String(dato.anio || '').trim() || null,
+        duracion: duracionVimeo(datos.duration),
+        publicado: String(datos.upload_date || ''),
+        descripcionCorta: String(dato.descripcion || datos.description || '').trim(),
+        linkVimeo: link,
+        categoria: String(dato.tipo || '').trim(),
+        ancho: Number(datos.width) || 0,
+        alto: Number(datos.height) || 0,
+        miniaturaUrl: datos.thumbnail_url || '',
+        destacadoManual: dato.destacado === true,
+        orden: indice,
       }
     }),
   )
-    // El más reciente primero (según la fecha de publicación que informa Vimeo).
-    .then((lista) => lista.filter(Boolean).sort((a, b) => b.publicado.localeCompare(a.publicado)))
-    .then((lista) => lista.map((video, indice) => ({...video, destacado: indice === 0, mostrarEnInicio: indice === 0})))
+    // En el orden de la lista (del más nuevo al más viejo, como en Vimeo).
+    .then((lista) => lista.filter(Boolean))
+    .then((lista) => {
+      const elegido = lista.find((video) => video.destacadoManual) || lista[0]
+      return lista.map((video) => ({...video, destacado: video === elegido, mostrarEnInicio: video === elegido}))
+    })
   return videosDemo
 }
 
@@ -1249,7 +1274,13 @@ function obrasDeSerieDemo(slug) {
 
 function serieVecina(serie) {
   if (!serie) return null
-  return {nombre: serie.nombre || '', slug: serie.slug || '', href: rutaSerie(serie.slug)}
+  return {
+    nombre: serie.nombre || '',
+    slug: serie.slug || '',
+    href: rutaSerie(serie.slug),
+    // Portada para la tarjeta «obra anterior / siguiente» al pie de cada obra.
+    portada: serie.portada || serie.portadaObra || null,
+  }
 }
 
 export async function fetchDisciplinas() {
@@ -1299,8 +1330,8 @@ export async function fetchSerie(slug) {
     return {
       ...prepararSerie(series[indice], obrasDemo()),
       obras: obrasDeSerieDemo(slug),
-      anterior: serieVecina(series[indice - 1]),
-      siguiente: serieVecina(series[indice + 1]),
+      anterior: series[indice - 1] ? serieVecina(prepararSerie(series[indice - 1], obrasDemo())) : null,
+      siguiente: series[indice + 1] ? serieVecina(prepararSerie(series[indice + 1], obrasDemo())) : null,
     }
   }
   const serie = await client.fetch(`*[_type == "serie" && slug.current == $slug && ${VISIBLE}][0] ${proyeccionSerie}`, {slug})

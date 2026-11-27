@@ -433,7 +433,8 @@ export const artista = {
 		botonSecundario: { texto: 'Consultar por una obra', enlace: '/contacto' },
 	},
 	heroAudiovisual: {
-		bajada: 'Producción audiovisual de Celia Gómez Perea. Sus piezas se publican en Vimeo.',
+		bajada:
+			'Videoperformance, videoinstalación y registro de acciones en el territorio. El cuerpo, el paisaje y el movimiento, en imagen y sonido.',
 		imagen: foto(
 			'celia-proceso-cine.webp',
 			1600,
@@ -603,6 +604,40 @@ export const configuracion = {
 		: null,
 }
 
-// Videos verificados del perfil vimeo.com/celigomez. Pegá aquí los links (por ejemplo https://vimeo.com/123456789).
-// Título, portada, duración y descripción se leen de Vimeo durante el build; no se completan a mano.
-export const videosVimeo = []
+// Videos del perfil vimeo.com/celigomez (página Audiovisual).
+// La portada, la duración y la descripción se leen de Vimeo al publicar; no se cargan a mano.
+// Por cada video se puede completar (todo opcional):
+//   titulo: el nombre que se muestra en la web. Si queda vacío, se usa el de Vimeo
+//           (sin «.mp4»; si es un nombre de archivo como «WhatsApp Video…», se muestra «Sin título»).
+//   anio:   el año de la obra (no el de subida a Vimeo).
+//   tipo:   agrupa los videos en la página. Los que no tienen tipo van a «Otros videos».
+//   destacado: true para que sea el video grande de arriba. Si ninguno lo tiene, va el más reciente.
+// Los tipos y títulos de abajo salen del CV de Celia: confirmarlos con ella.
+export const videosVimeo = [
+	{ link: 'https://vimeo.com/1202140179', titulo: 'Telar acción', anio: '', tipo: 'Performance' },
+	{
+		link: 'https://vimeo.com/1202136668',
+		titulo: 'Hacer de nuestra mirada la diferencia',
+		anio: '2024',
+		tipo: 'Acción colectiva',
+	},
+	{ link: 'https://vimeo.com/1106622793', titulo: 'Azul Patagonia', anio: '', tipo: '' },
+	{
+		link: 'https://vimeo.com/1106620505',
+		titulo: 'Hacer de mi mirada la diferencia',
+		anio: '2024',
+		tipo: 'Acción colectiva',
+	},
+	// En Vimeo se llama «WhatsApp Video 2024-10-11…»: ponerle nombre.
+	{ link: 'https://vimeo.com/1106620145', titulo: '', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1106303300', titulo: 'Estado anterior', anio: '2019', tipo: 'Videoinstalación' },
+	{ link: 'https://vimeo.com/1103661620', titulo: 'Retícula agua', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1103661486', titulo: 'El patio suena', anio: '2019', tipo: 'Performance' },
+	{ link: 'https://vimeo.com/1103661266', titulo: 'Dentro', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1103568028', titulo: 'Ser cuerpo territorio', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1103568017', titulo: 'Tempo resonante', anio: '2015', tipo: 'Videoinstalación' },
+	{ link: 'https://vimeo.com/1103568001', titulo: 'Pos-resonante', anio: '2015', tipo: 'Videoinstalación' },
+	{ link: 'https://vimeo.com/1103567967', titulo: '', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1103567390', titulo: '', anio: '', tipo: '' },
+	{ link: 'https://vimeo.com/1101068095', titulo: '', anio: '', tipo: '' },
+]
