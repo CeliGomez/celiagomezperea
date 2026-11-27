@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import ObraPlaceholder from './ObraPlaceholder.jsx'
 import { relacionDe } from '../../lib/proporcion.js'
 
@@ -284,7 +285,12 @@ export default function Visor({ imagenes = [], titulo = '', anio = null, slug = 
 				</div>
 			)}
 
-			{abierto && !rota && (
+			{/* El ampliado se monta directo en <body>: así queda por encima de todo
+			    (encabezado, ficha, botones), aunque el visor esté dentro de una columna fija. */}
+			{abierto &&
+				!rota &&
+				typeof document !== 'undefined' &&
+				createPortal(
 				<div
 					ref={dialogo}
 					className="lightbox"
@@ -382,8 +388,9 @@ export default function Visor({ imagenes = [], titulo = '', anio = null, slug = 
 							</p>
 						)}
 					</div>
-				</div>
-			)}
+				</div>,
+					document.body,
+				)}
 		</div>
 	)
 }
