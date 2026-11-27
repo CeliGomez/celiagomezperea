@@ -31,7 +31,7 @@ export const obra = defineType({
       title: 'Título',
       type: 'string',
       description:
-        'Si la pieza tiene nombre propio, escribilo con mayúscula («Raíz azul»). Si no tiene, escribí algo corto en minúscula («unavez3»): la web la muestra como «Sin título», con su número y su código.',
+        'Si la pieza tiene nombre propio, escribilo con mayúscula inicial («Raíz azul»): la web muestra ese nombre. Si no tiene, escribí algo corto en minúscula («unavez3»): la web la muestra por su número («N.º 3») y su código.',
       validation: (rule) => rule.required().error('Escribí un título (puede ser en minúscula si la pieza no tiene nombre).'),
     }),
     defineField({

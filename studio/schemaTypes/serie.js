@@ -1,7 +1,7 @@
 import {defineField, defineType} from 'sanity'
 import {textoEnriquecido} from './bloques.js'
 import {campoImagen} from './imagen.js'
-import {maximoMarcados, slugUnico} from './validaciones.js'
+import {slugUnico} from './validaciones.js'
 
 export const serie = defineType({
   name: 'serie',
@@ -93,12 +93,7 @@ export const serie = defineType({
       type: 'boolean',
       description: 'Si la marcás, puede aparecer entre las series del inicio. Podés destacar hasta 3.',
       initialValue: false,
-      validation: maximoMarcados(
-        'serie',
-        'destacada',
-        3,
-        'Ya hay 3 series destacadas. Desmarcá una para poder marcar esta.',
-      ),
+      // Campo viejo y oculto: ya no se usa en la web. Sin validación, para que no bloquee «Publicar».
     }),
     defineField({
       name: 'principalInicio',
@@ -107,12 +102,8 @@ export const serie = defineType({
       type: 'boolean',
       description: 'Opcional. Si ninguna está marcada, se muestra la primera.',
       initialValue: false,
-      validation: maximoMarcados(
-        'serie',
-        'principalInicio',
-        1,
-        'Ya hay otra obra marcada para el inicio. Desmarcá esa primero.',
-      ),
+      // Campo viejo y oculto: ya no se usa en la web. Antes solo dejaba marcar una obra, y como había
+      // dos marcadas, el error (invisible, porque el campo está oculto) dejaba «Publicar» en gris.
     }),
   ],
   orderings: [
@@ -127,12 +118,11 @@ export const serie = defineType({
       title: 'nombre',
       media: 'portada',
       publicada: 'publicada',
-      principal: 'principalInicio',
       anio: 'anio',
     },
-    prepare({title, media, publicada, principal, anio}) {
+    prepare({title, media, publicada, anio}) {
       const estado = publicada === false ? 'Oculta' : 'Visible'
-      const partes = [estado, principal ? 'Grande en el inicio' : '', anio].filter(Boolean)
+      const partes = [estado, anio].filter(Boolean)
       return {title: title || 'Sin nombre', media, subtitle: partes.join(' · ')}
     },
   },

@@ -43,8 +43,15 @@ const lista = obras.slice(0, 8)
 									)}
 								</span>
 								<span class="mas__pie">
-									{obra.numero && <span class="mas__numero">N.º {obra.numero}</span>}
-									<span class="mas__nombre">{obra.titulo}</span>
+									{/* Sin nombre propio: solo el número, como título. */}
+									{obra.titulo === 'Sin título' && obra.numero ? (
+										<span class="mas__nombre">N.º {obra.numero}</span>
+									) : (
+										<>
+											{obra.numero && <span class="mas__numero">N.º {obra.numero}</span>}
+											<span class="mas__nombre">{obra.titulo}</span>
+										</>
+									)}
 								</span>
 							</a>
 						</li>

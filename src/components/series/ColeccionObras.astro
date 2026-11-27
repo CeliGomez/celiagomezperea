@@ -39,7 +39,10 @@ function proporcion(obra) {
 								/>
 							)}
 						</figure>
-						<h3 class="cuadro__titulo">{obra.titulo}</h3>
+						{/* Sin nombre propio: el número hace de título. */}
+						<h3 class="cuadro__titulo">
+							{(!obra.titulo || obra.titulo === 'Sin título') && obra.numero > 0 ? `N.º ${obra.numero}` : obra.titulo}
+						</h3>
 						{(obra.codigo || obra.anio || obra.medidas) && (
 							<p class="cuadro__anio">{[obra.codigo, obra.anio, obra.medidas].filter(Boolean).join(' · ')}</p>
 						)}

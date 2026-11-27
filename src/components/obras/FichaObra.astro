@@ -75,6 +75,8 @@ const hrefFormulario = `${rutas.contacto}?obra=${encodeURIComponent(referencia)}
 // Las vecinas sin nombre propio se muestran por su número.
 const nombreVecina = (vecina, numero) =>
 	vecina?.titulo === 'Sin título' && serie?.nombre && numero > 0 ? `N.º ${numero}` : vecina?.titulo
+// Sin nombre propio y dentro de una obra: el título es su número («N.º 3»).
+const sinNombre = obra?.titulo === 'Sin título' && Boolean(serie?.nombre) && obra?.numero > 0
 const textoConsulta = vendida ? 'Consultar por obras similares' : 'Consultar por WhatsApp'
 ---
 
@@ -95,14 +97,13 @@ const textoConsulta = vendida ? 'Consultar por obras similares' : 'Consultar por
 
 		<h1 class="ficha__titulo">
 			{/* Para lectores de pantalla y Google: «Sin título» solo no dice qué pieza es. */}
-			{obra.titulo === 'Sin título' && serie?.nombre && obra?.numero > 0 && (
-				<span class="sr-only">{serie.nombre}, N.º {obra.numero}: </span>
-			)}
-			{obra.titulo}
+			{sinNombre && <span class="sr-only">{serie.nombre}, </span>}
+			{sinNombre ? `N.º ${obra.numero}` : obra.titulo}
 		</h1>
 
 		<div class="ficha__ids">
-			{obra?.numero > 0 && serie?.nombre && <span>N.º {obra.numero}{total > 1 ? ` de ${total}` : ''}</span>}
+			{sinNombre && total > 1 && <span>{obra.numero} de {total}</span>}
+			{!sinNombre && obra?.numero > 0 && serie?.nombre && <span>N.º {obra.numero}{total > 1 ? ` de ${total}` : ''}</span>}
 			{obra?.codigo && <span class="ficha__codigo" title="Código para consultar por esta pieza">Código {obra.codigo}</span>}
 		</div>
 

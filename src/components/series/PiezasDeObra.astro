@@ -7,11 +7,12 @@ import { rutaObra } from '../../lib/rutas.js'
 	- Todas las fotos en un recuadro de la misma altura, apoyadas sobre una misma línea,
 	  así verticales y horizontales quedan alineadas.
 	- Arriba de cada título va su número dentro de la obra (N.º 1, N.º 2…).
-	  Si la pieza no tiene título, se muestra «Sin título».
+	  Si la pieza no tiene nombre propio, el número pasa a ser el título y arriba va el código.
 	obras: salida de fetchSerie().obras.
 */
 const { obras = [], papel = false } = Astro.props
 const numero = (obra, indice) => indice + 1
+const sinNombre = (obra) => !obra.titulo || obra.titulo === 'Sin título'
 ---
 
 {
@@ -37,8 +38,17 @@ const numero = (obra, indice) => indice + 1
 							)}
 						</span>
 						<span class="pieza__pie">
-							<span class="pieza__numero">N.º {numero(obra, indice)}{obra.codigo && ` · ${obra.codigo}`}</span>
-							<span class="pieza__titulo">{obra.titulo || 'Sin título'}</span>
+							{sinNombre(obra) ? (
+								<>
+									{obra.codigo && <span class="pieza__numero">{obra.codigo}</span>}
+									<span class="pieza__titulo">N.º {numero(obra, indice)}</span>
+								</>
+							) : (
+								<>
+									<span class="pieza__numero">N.º {numero(obra, indice)}{obra.codigo && ` · ${obra.codigo}`}</span>
+									<span class="pieza__titulo">{obra.titulo}</span>
+								</>
+							)}
 							{(obra.anio || obra.medidas || obra.tecnica) && (
 								<span class="pieza__datos">{[obra.anio, obra.tecnica, obra.medidas].filter(Boolean).join(' · ')}</span>
 							)}

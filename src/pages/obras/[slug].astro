@@ -140,7 +140,11 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 						<Visor
 							client:load
 							imagenes={ficha.obra.imagenes}
-							titulo={ficha.obra.titulo}
+							titulo={
+								ficha.obra.titulo === 'Sin título' && ficha.enSerie?.serie?.nombre
+									? `${ficha.enSerie.serie.nombre} · N.º ${ficha.obra.numero}`
+									: ficha.obra.titulo
+							}
 							anio={ficha.obra.anio}
 							slug={ficha.obra.slug}
 							relacion={ficha.obra.relacion}
