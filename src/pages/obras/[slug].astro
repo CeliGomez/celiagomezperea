@@ -19,7 +19,8 @@ export async function getStaticPaths() {
 		}
 	}
 	const paginasDisciplina = disciplinas
-		.filter((disciplina) => disciplina.slug && !slugsObra.has(disciplina.slug))
+		// Solo Ilustraciones tiene página propia: los cuadros se recorren en /series.
+		.filter((disciplina) => disciplina.slug === 'obras-sobre-papel' && !slugsObra.has(disciplina.slug))
 		.map((disciplina) => ({
 			params: { slug: disciplina.slug },
 			props: { tipo: 'disciplina', slug: disciplina.slug },
@@ -42,12 +43,21 @@ const titulo = esDisciplina
 	? artista?.nombre
 		? `${paginaDisciplina.disciplina.nombre} — ${artista.nombre}`
 		: paginaDisciplina?.disciplina?.nombre || 'Disciplina'
-	: artista?.nombre
-		? `${ficha.obra.titulo} — ${artista.nombre}`
-		: ficha.obra.titulo
+	: [
+			ficha.enSerie?.serie?.nombre
+				? `${ficha.obra.titulo === 'Sin título' ? '' : ficha.obra.titulo + ' · '}${ficha.enSerie.serie.nombre} N.º ${ficha.obra.numero}`
+				: ficha.obra.titulo,
+			artista?.nombre,
+		]
+			.filter(Boolean)
+			.join(' — ')
 const descripcion = esDisciplina
 	? paginaDisciplina?.disciplina?.descripcion || titulo
 	: ficha.obra.descripcionCorta || (artista?.nombre ? `${ficha.obra.titulo}, obra de ${artista.nombre}.` : ficha.obra.titulo)
+// Miga de la pieza: vuelve a Cuadros o a Ilustraciones, y a su obra.
+const volver = ficha?.obra?.ilustracion
+	? { href: rutas.ilustraciones, texto: 'Ilustraciones' }
+	: { href: rutas.cuadros, texto: 'Cuadros' }
 const datos = !esDisciplina && ficha?.obra?.titulo
 	? {
 			'@context': 'https://schema.org',
@@ -92,50 +102,125 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 			vimeo={configuracion?.vimeo}
 			youtube={configuracion?.youtube}
 			datos={datos}
+			seccion={ficha.obra.ilustracion ? 'ilustraciones' : 'cuadros'}
 		>
-			<div class="detalle-volver contenedor">
-				{
-					ficha.enSerie?.serie?.href ? (
-						<a class="detalle-volver__link" href={ficha.enSerie.serie.href}>
-							<span class="detalle-volver__flecha" aria-hidden="true">←</span>
-							Volver a la serie
-						</a>
-					) : (
-						<a class="detalle-volver__link" href={rutas.obras}>
-							<span class="detalle-volver__flecha" aria-hidden="true">←</span>
-							Volver a obras
-						</a>
-					)
-				}
-				{
-					ficha.enSerie?.serie?.href && (
-						<a class="detalle-volver__link" href={rutas.obras}>
-							Todas las obras
-						</a>
-					)
-				}
-			</div>
-			<article class="detalle contenedor grilla">
-				<div class="detalle__visor">
-					<Visor
-						client:load
-						imagenes={ficha.obra.imagenes}
-						titulo={ficha.obra.titulo}
-						anio={ficha.obra.anio}
-						slug={ficha.obra.slug}
-						relacion={ficha.obra.relacion}
+			<div class="pieza-pagina">
+				{/* Miga: sección › obra */}
+				<nav class="pieza-miga contenedor" aria-label="Ubicación">
+					<a href={volver.href}>{volver.texto}</a>
+					{ficha.enSerie?.serie?.href && (
+						<>
+							<span aria-hidden="true">/</span>
+							<a href={ficha.enSerie.serie.href}>{ficha.enSerie.serie.nombre}</a>
+						</>
+					)}
+				</nav>
+
+				<article class="pieza contenedor">
+					<div class="pieza__visor">
+						<Visor
+							client:load
+							imagenes={ficha.obra.imagenes}
+							titulo={ficha.obra.titulo}
+							anio={ficha.obra.anio}
+							slug={ficha.obra.slug}
+							relacion={ficha.obra.relacion}
+						/>
+						<p class="pieza__ayuda">Tocá la imagen para verla en grande.</p>
+					</div>
+					<FichaObra
+						obra={ficha.obra}
+						whatsapp={configuracion?.whatsapp}
+						envio={configuracion?.envioColeccion || ''}
+						anterior={ficha.enSerie ? ficha.enSerie.anterior : null}
+						siguiente={ficha.enSerie ? ficha.enSerie.siguiente : null}
+						enSerie={ficha.enSerie}
+						url={new URL(Astro.url.pathname, Astro.site ?? Astro.url).href}
 					/>
-				</div>
-				<FichaObra
-					obra={ficha.obra}
-					whatsapp={configuracion?.whatsapp}
-					envio={configuracion?.envioColeccion || ''}
-					anterior={ficha.enSerie ? ficha.enSerie.anterior : ficha.anterior}
-					siguiente={ficha.enSerie ? ficha.enSerie.siguiente : ficha.siguiente}
-					enSerie={ficha.enSerie}
-				/>
-			</article>
-			<MasObras obras={ficha.relacionadas} serie={ficha.enSerie?.serie || null} />
+				</article>
+
+				<MasObras obras={ficha.relacionadas} serie={ficha.enSerie?.serie || null} ilustracion={ficha.obra.ilustracion} />
+			</div>
 		</Layout>
 	) : null
 }
+
+<style>
+	/* ——— Página de una pieza ——— */
+	.pieza-pagina {
+		padding-top: clamp(1.5rem, 3vw, 2.5rem);
+	}
+
+	.pieza-miga {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 0.75rem;
+		margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 45%, transparent);
+	}
+
+	.pieza-miga a {
+		color: var(--azul-profundo);
+		text-decoration: none;
+	}
+
+	.pieza-miga a:hover,
+	.pieza-miga a:focus-visible {
+		color: var(--dorado-oscuro);
+	}
+
+	.pieza {
+		display: grid;
+		gap: 2.5rem;
+		padding-bottom: clamp(3.5rem, 7vw, 6rem);
+	}
+
+	/* La pieza sobre una «pared» crema con textura, colgada con sombra. */
+	.pieza__visor :global(.visor__escena) {
+		min-height: clamp(20rem, 60vh, 44rem);
+		padding: clamp(1.5rem, 5vw, 4.5rem);
+		background-color: var(--marfil);
+		background-image: var(--textura-pigmento);
+		background-size: 720px 720px;
+		background-blend-mode: soft-light;
+	}
+
+	.pieza__visor :global(.visor__img) {
+		max-height: 72svh;
+		filter: drop-shadow(0 24px 30px rgb(25 25 25 / 0.22));
+	}
+
+	.pieza__ayuda {
+		margin-top: 0.75rem;
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 45%, transparent);
+	}
+
+	@media (hover: none) {
+		.pieza__ayuda {
+			display: block;
+		}
+	}
+
+	@media (min-width: 64rem) {
+		.pieza {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+			align-items: start;
+			gap: clamp(3rem, 5vw, 5rem);
+		}
+
+		.pieza__visor {
+			position: sticky;
+			top: 6.5rem;
+		}
+	}
+</style>

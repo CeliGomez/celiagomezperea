@@ -66,7 +66,7 @@ const fondoSrc = fondo?.imagen ? urlFor(fondo.imagen).width(1800).url() : ''
 							<span class="cuadros-destacados__pie">
 								<span class="cuadros-destacados__titulo">{cuadro.titulo}</span>
 								<span class="cuadros-destacados__datos">
-									{[cuadro.obra, cuadro.anio, cuadro.dimensiones].filter(Boolean).join(' · ')}
+									{[cuadro.obra, cuadro.codigo, cuadro.anio, cuadro.dimensiones].filter(Boolean).join(' · ')}
 								</span>
 							</span>
 						</a>

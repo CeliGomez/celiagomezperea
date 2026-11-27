@@ -9,6 +9,7 @@ import Formulario from '../contacto/Formulario.jsx'
 */
 const { clave = '', whatsapp = '', email = '', instagram = '', vimeo = '' } = Astro.props
 const usuarioInstagram = instagram ? '@' + instagram.replace(/\/+$/, '').split('/').pop() : ''
+const digitosWhatsapp = String(whatsapp || '').replace(/\D/g, '')
 ---
 
 <section class="contacto-inicio" aria-labelledby="contacto-inicio-titulo">
@@ -22,12 +23,20 @@ const usuarioInstagram = instagram ? '@' + instagram.replace(/\/+$/, '').split('
 			<p class="contacto-inicio__texto">Consultas sobre obra, adquisiciones, proyectos o exhibiciones.</p>
 
 			{
-				(email || usuarioInstagram) && (
+				(email || usuarioInstagram || digitosWhatsapp) && (
 					<ul class="contacto-inicio__directo">
 						{email && (
 							<li>
 								<span class="contacto-inicio__etiqueta">Email</span>
 								<a href={`mailto:${email}`}>{email}</a>
+							</li>
+						)}
+						{digitosWhatsapp && (
+							<li>
+								<span class="contacto-inicio__etiqueta">WhatsApp</span>
+								<a href={`https://wa.me/${digitosWhatsapp}`} target="_blank" rel="noopener noreferrer">
+									{whatsapp}
+								</a>
 							</li>
 						)}
 						{usuarioInstagram && (

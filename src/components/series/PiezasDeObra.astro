@@ -37,7 +37,7 @@ const numero = (obra, indice) => indice + 1
 							)}
 						</span>
 						<span class="pieza__pie">
-							<span class="pieza__numero">N.º {numero(obra, indice)}</span>
+							<span class="pieza__numero">N.º {numero(obra, indice)}{obra.codigo && ` · ${obra.codigo}`}</span>
 							<span class="pieza__titulo">{obra.titulo || 'Sin título'}</span>
 							{(obra.anio || obra.medidas || obra.tecnica) && (
 								<span class="pieza__datos">{[obra.anio, obra.tecnica, obra.medidas].filter(Boolean).join(' · ')}</span>

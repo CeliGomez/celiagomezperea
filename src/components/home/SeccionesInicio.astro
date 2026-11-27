@@ -22,6 +22,8 @@ const { secciones = [] } = Astro.props
 						<a
 							class:list={['fila', `fila--${seccion.tono}`]}
 							href={seccion.enlace}
+							target={/^https?:/.test(seccion.enlace) ? '_blank' : undefined}
+							rel={/^https?:/.test(seccion.enlace) ? 'noopener noreferrer' : undefined}
 							aria-labelledby={`fila-${seccion.id}-titulo`}
 							aria-describedby={seccion.descripcion ? `fila-${seccion.id}-descripcion` : undefined}
 						>
@@ -61,6 +63,7 @@ const { secciones = [] } = Astro.props
 								]}
 							>
 								<span class="fila__filete" aria-hidden="true" />
+								{seccion.etiqueta && <span class="fila__etiqueta">{seccion.etiqueta}</span>}
 								<h2 id={`fila-${seccion.id}-titulo`} class="fila__titulo">
 									{seccion.titulo}
 								</h2>
@@ -85,6 +88,21 @@ const { secciones = [] } = Astro.props
 <style>
 	.secciones {
 		padding-top: var(--bloque);
+	}
+
+	/* «Próximamente»: etiqueta chica arriba del título. */
+	.fila__etiqueta {
+		display: inline-block;
+		width: fit-content;
+		margin-bottom: 0.75rem;
+		padding: 0.3rem 0.65rem;
+		border: 1px solid var(--dorado);
+		color: var(--dorado);
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
 	}
 
 	.secciones__lista {

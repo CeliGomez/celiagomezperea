@@ -1,6 +1,8 @@
 ---
 import Firma from './Firma.astro'
 import { rutas } from '../../lib/rutas.js'
+import { configuracion } from '../../data/demo.js'
+import { linkWhatsapp } from '../../lib/piezas.js'
 
 const { nombre = '', email = '', instagram = '', vimeo = '', youtube = '', creditos = '' } = Astro.props
 
@@ -18,6 +20,10 @@ const paginas = [
 	{ href: rutas.sobreMi, label: 'Sobre mí' },
 	{ href: rutas.contacto, label: 'Contacto' },
 ]
+
+// WhatsApp: sale de los datos de contacto fijos (src/data/demo.js).
+const whatsapp = configuracion?.whatsapp || ''
+const hrefWhatsapp = linkWhatsapp(whatsapp)
 
 const anio = new Date().getFullYear()
 const firmante = nombre || 'Celia Gómez Perea'
@@ -56,6 +62,15 @@ const firmante = nombre || 'Celia Gómez Perea'
 							<path d="m3.5 6 8.5 7 8.5-7" />
 						</svg>
 						{email}
+					</a>
+				)}
+				{hrefWhatsapp && (
+					<a class="site-footer__dato site-footer__email" href={hrefWhatsapp} target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<path d="M12 3.2a8.8 8.8 0 0 0-7.6 13.2L3.2 20.8l4.5-1.2A8.8 8.8 0 1 0 12 3.2Z" />
+							<path d="M9 8.6c.2-.4.5-.4.7-.4h.5c.2 0 .4 0 .5.4l.7 1.6c.1.2 0 .4-.1.6l-.5.6c.6 1.1 1.5 2 2.6 2.6l.6-.5c.2-.1.4-.2.6-.1l1.6.7c.3.1.4.3.4.5v.5c0 .2 0 .5-.4.7-.5.3-1.2.5-1.9.4-2.6-.4-5.2-3-5.6-5.6-.1-.7.1-1.4.3-1.9Z" />
+						</svg>
+						{whatsapp}
 					</a>
 				)}
 				{redes.length > 0 && (

@@ -611,11 +611,15 @@ export const seccionesInicio = [
 	{
 		_key: 'estacion-nomade',
 		titulo: 'Estación Nómade',
-		// Texto provisorio: confirmar con Celia
-		descripcion: 'Un espacio creativo para talleres, eventos de arte y encuentros en torno a la creación.',
-		textoBoton: 'Ver más',
-		// Cambiar cuando exista la página o el Instagram de Estación Nómade
-		enlace: '/contacto',
+		// Próxima apertura: la tarjeta lleva la etiqueta «Próximamente» y el botón abre WhatsApp
+		// con un mensaje para recibir novedades. Cuando abra, cambiar el enlace por su página o su Instagram.
+		etiqueta: 'Próximamente',
+		descripcion:
+			'El taller de Celia: un espacio para talleres, encuentros y actividades artísticas. Muy pronto abre sus puertas.',
+		textoBoton: 'Quiero enterarme',
+		enlace:
+			'https://wa.me/5492804726656?text=' +
+			encodeURIComponent('Hola Celia, te escribo desde tu web. Quiero recibir novedades de la Estación Nómade.'),
 		// Ilustración de Celia que representa a la Estación Nómade (versión apaisada para la fila).
 		imagen: {
 			...foto(
@@ -637,7 +641,8 @@ export const configuracion = {
 	_type: 'configuracion',
 	// Correo de la cuenta de Web3Forms: ahí llegan las consultas del formulario.
 	email: 'estacionnomadetw@gmail.com',
-	whatsapp: '',
+	// WhatsApp de Celia: aparece en Contacto y en el botón «Consultar por WhatsApp» de cada pieza.
+	whatsapp: '+54 9 280 472-6656',
 	ciudad: '',
 	instagram: 'https://www.instagram.com/celiagomezperea/',
 	vimeo: 'https://vimeo.com/celigomez',

@@ -7,20 +7,16 @@ import SobreArtista from '../components/home/SobreArtista.astro'
 import ContactoInicio from '../components/home/ContactoInicio.astro'
 import {
 	fetchDiapositivasHero,
-	fetchFraseInicio,
 	fetchHeroInicio,
 	fetchFragmentos,
 	fetchInicio,
 	fetchSeccionesInicio,
 	fetchCuadrosDestacados,
-	imagenDisponible,
-	urlFor,
 } from '../lib/sanity.js'
 
-const [{ artista, configuracion }, diapositivas, frase, cuadros, secciones, textoHero, fragmentos] = await Promise.all([
+const [{ artista, configuracion }, diapositivas, cuadros, secciones, textoHero, fragmentos] = await Promise.all([
 	fetchInicio(),
 	fetchDiapositivasHero(),
-	fetchFraseInicio(),
 	fetchCuadrosDestacados(),
 	fetchSeccionesInicio(),
 	fetchHeroInicio(),
@@ -30,8 +26,8 @@ const clave = import.meta.env.PUBLIC_WEB3FORMS_KEY || ''
 
 const nombre = artista?.nombre || ''
 const titulo = nombre ? `${nombre} — ${artista?.subtitulo || 'Artista visual'}` : 'Inicio'
-const imagenOg = diapositivas[0]?.imagen || (imagenDisponible(artista?.retrato) ? artista.retrato : null)
-const ogImage = imagenOg ? urlFor(imagenOg).width(1200).height(630).url() : undefined
+// Al compartir el Inicio se ve la tarjeta general (public/og-celia.jpg).
+const ogImage = '/og-celia.jpg'
 const mismos = [configuracion?.instagram, configuracion?.vimeo, configuracion?.youtube].filter(Boolean)
 const datos = nombre
 	? {
@@ -47,9 +43,9 @@ const datos = nombre
 
 <Layout
 	title={titulo}
-	description={artista?.bioCorta || frase || 'Pintura, dibujo, instalación, performance y video.'}
+	description={artista?.bioCorta || 'Pintura, dibujo, instalación, performance y video.'}
 	ogImage={ogImage}
-	ogImageAlt={imagenOg?.alt || nombre || 'Inicio'}
+	ogImageAlt={nombre ? `${nombre}, artista visual de la Patagonia` : 'Inicio'}
 	nombre={artista?.nombre}
 	subtitulo={artista?.subtitulo}
 	email={configuracion?.email}

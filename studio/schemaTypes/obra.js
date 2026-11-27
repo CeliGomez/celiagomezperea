@@ -31,8 +31,8 @@ export const obra = defineType({
       title: 'Título',
       type: 'string',
       description:
-        'El nombre del cuadro o de la ilustración.',
-      validation: (rule) => rule.required().error('Escribí el título de la obra.'),
+        'Si la pieza tiene nombre propio, escribilo con mayúscula («Raíz azul»). Si no tiene, escribí algo corto en minúscula («unavez3»): la web la muestra como «Sin título», con su número y su código.',
+      validation: (rule) => rule.required().error('Escribí un título (puede ser en minúscula si la pieza no tiene nombre).'),
     }),
     defineField({
       name: 'slug',

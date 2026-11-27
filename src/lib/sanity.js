@@ -5,6 +5,7 @@ import {createImageUrlBuilder} from '@sanity/image-url'
 import * as demo from '../data/demo.js'
 import {htmlDePortable, textoDePortable} from './texto.js'
 import {resolverEnlace, rutaDisciplina, rutaSerie} from './rutas.js'
+import {codigoPieza, nombrePieza} from './piezas.js'
 
 const API_VERSION = '2026-11-05'
 const COLOR_SUPERFICIE = '#f2e9e0'
@@ -504,14 +505,15 @@ function referenciaNombrada(valor, catalogo) {
   if (!slug) return null
   const conocida = (catalogo || []).find((item) => item.slug === slug)
   const nombre = (typeof valor === 'object' && valor.nombre) || conocida?.nombre || ''
-  return {nombre, slug}
+  const sigla = (typeof valor === 'object' && valor.sigla) || conocida?.sigla || ''
+  return {nombre, slug, sigla}
 }
 
 function prepararObraGaleria(obra) {
   const imagen = obra.imagenPrincipal
   const ref = imagen?.asset?._id || imagen?.asset?._ref || ''
   const base = {
-    titulo: obra.titulo || '',
+    titulo: nombrePieza(obra.titulo),
     slug: obra.slug,
     anio: obra.anio ?? null,
     tecnica: obra.tecnica || '',
@@ -590,7 +592,7 @@ export async function fetchGaleria() {
         estado,
         categoria,
         proyecto,
-        "serie": serie->{ nombre, "slug": slug.current },
+        "serie": serie->{ nombre, "slug": slug.current, sigla },
         "disciplina": disciplina->{ nombre, "slug": slug.current },
         imagenPrincipal {
           alt,
@@ -653,11 +655,12 @@ function fotoDetalle(imagen, titulo = '') {
 }
 
 function prepararObraDetalle(obra) {
+  const titulo = nombrePieza(obra.titulo)
   const fotos = [obra.imagenPrincipal, ...(obra.imagenesAdicionales || [])]
-    .map((imagen) => fotoDetalle(imagen, obra.titulo))
+    .map((imagen) => fotoDetalle(imagen, titulo))
     .filter(Boolean)
   return {
-    titulo: obra.titulo || '',
+    titulo,
     slug: obra.slug,
     anio: obra.anio ?? null,
     tecnica: obra.tecnica || '',
@@ -669,7 +672,7 @@ function prepararObraDetalle(obra) {
     imagenes: fotos,
     relacion: relacionConfiable(obra.imagenPrincipal),
     imagenPrincipal: imagenDisponible(obra.imagenPrincipal) ? obra.imagenPrincipal : null,
-    serie: obra.serie?.slug ? {nombre: obra.serie.nombre || '', slug: obra.serie.slug} : null,
+    serie: obra.serie?.slug ? referenciaNombrada(obra.serie, demo.series) : null,
     ordenEnSerie: obra.ordenEnSerie ?? null,
     disciplina: obra.disciplina?.slug
       ? {nombre: obra.disciplina.nombre || '', slug: obra.disciplina.slug}
@@ -697,10 +700,12 @@ function resumenRelacionada(obra) {
 export function elegirRelacionadas(obras, actual) {
   const resto = obras.filter((obra) => obra.slug !== actual.slug)
   if (actual.serie?.slug) {
-    return resto
+    // Se numeran con la serie completa, así coinciden con el N.º de cada pieza.
+    return obras
       .filter((obra) => obra.serie?.slug === actual.serie.slug)
       .sort((a, b) => (a.ordenEnSerie ?? 999999) - (b.ordenEnSerie ?? 999999))
-      .map(resumenRelacionada)
+      .map((obra, indice) => ({...resumenRelacionada(obra), numero: indice + 1}))
+      .filter((obra) => obra.slug !== actual.slug)
   }
   const mismaDisciplina = actual.disciplina?.slug
     ? resto.filter((obra) => obra.disciplina?.slug === actual.disciplina.slug)
@@ -739,11 +744,20 @@ function paginasDe(vistas, artista, configuracion) {
   const envioColeccion =
     typeof configuracion?.envioColeccion === 'string' ? configuracion.envioColeccion.trim() : ''
 
-  return vistas.map((obra, indice) => ({
+  // Las ilustraciones sueltas se numeran entre ellas, en el orden de la galería.
+  const sueltas = vistas.filter((obra) => !obra.serie?.slug && obra.disciplina?.slug === PAPEL)
+
+  return vistas.map((obra, indice) => {
+    const enSerie = vecinasEnSerie(vistas, obra)
+    const numero = enSerie ? enSerie.posicion.actual : sueltas.indexOf(obra) + 1
+    return {
     params: { slug: obra.slug },
     props: {
       obra: {
         titulo: obra.titulo,
+        numero,
+        codigo: codigoPieza({obra: enSerie?.serie?.nombre || '', sigla: obra.serie?.sigla, numero}),
+        ilustracion: obra.disciplina?.slug === PAPEL,
         slug: obra.slug,
         anio: obra.anio,
         tecnica: obra.tecnica,
@@ -763,7 +777,7 @@ function paginasDe(vistas, artista, configuracion) {
       anterior: vecina(vistas[indice - 1]),
       siguiente: vecina(vistas[indice + 1]),
       relacionadas: elegirRelacionadas(vistas, obra),
-      enSerie: vecinasEnSerie(vistas, obra),
+      enSerie,
       artista: {
         nombre: artista?.nombre || '',
         subtitulo: artista?.subtitulo || '',
@@ -778,7 +792,8 @@ function paginasDe(vistas, artista, configuracion) {
         envioColeccion,
       },
     },
-  }))
+    }
+  })
 }
 
 function vistasDe(obras) {
@@ -822,7 +837,7 @@ export async function fetchPaginasObra() {
         anchoCm,
         precio,
         mostrarPrecio,
-        "serie": serie->{ nombre, "slug": slug.current },
+        "serie": serie->{ nombre, "slug": slug.current, sigla },
         "disciplina": disciplina->{ nombre, "slug": slug.current },
         imagenPrincipal ${imagenConMedidas},
         imagenesAdicionales[] ${imagenConMedidas}
@@ -1127,6 +1142,7 @@ const porOrden = (a, b) => (a.orden ?? 999999) - (b.orden ?? 999999)
 
 const proyeccionSerie = `{
   nombre,
+  sigla,
   "slug": slug.current,
   anio,
   tecnicaGeneral,
@@ -1157,7 +1173,7 @@ const proyeccionObraLista = `{
   altoCm,
   anchoCm,
   imagenPrincipal ${imagen},
-  "serie": serie->{ nombre, "slug": slug.current },
+  "serie": serie->{ nombre, "slug": slug.current, sigla },
   "disciplina": disciplina->{ nombre, "slug": slug.current }
 }`
 
@@ -1231,6 +1247,7 @@ function prepararSerie(serie, obras) {
   const portada = portadaDeSerie(serie, obras)
   return {
     nombre: serie.nombre || '',
+    sigla: String(serie.sigla || '').trim(),
     slug: serie.slug || '',
     href: rutaSerie(serie.slug),
     disciplina: normalizarDisciplina(serie.disciplina),
@@ -1277,6 +1294,15 @@ function obrasDeSerieDemo(slug) {
     .filter((obra) => obra.serie?.slug === slug)
     .sort((a, b) => (a.ordenEnSerie ?? 999999) - (b.ordenEnSerie ?? 999999))
     .map(obraDeLista)
+}
+
+// Número y código de cada pieza dentro de su obra (en el orden «Lugar dentro de la obra»).
+function numerar(obras, serie) {
+  return obras.map((obra, indice) => ({
+    ...obra,
+    numero: indice + 1,
+    codigo: codigoPieza({obra: serie?.nombre || '', sigla: serie?.sigla, numero: indice + 1}),
+  }))
 }
 
 function serieVecina(serie) {
@@ -1336,7 +1362,7 @@ export async function fetchSerie(slug) {
     if (indice < 0) return null
     return {
       ...prepararSerie(series[indice], obrasDemo()),
-      obras: obrasDeSerieDemo(slug),
+      obras: numerar(obrasDeSerieDemo(slug), series[indice]),
       anterior: series[indice - 1] ? serieVecina(prepararSerie(series[indice - 1], obrasDemo())) : null,
       siguiente: series[indice + 1] ? serieVecina(prepararSerie(series[indice + 1], obrasDemo())) : null,
     }
@@ -1362,7 +1388,7 @@ export async function fetchSerie(slug) {
   ])
   return {
     ...prepararSerie(serie),
-    obras: (obras || []).map(obraDeLista),
+    obras: numerar((obras || []).map(obraDeLista), serie),
     anterior: anterior ? serieVecina(prepararSerie(anterior)) : null,
     siguiente: siguiente ? serieVecina(prepararSerie(siguiente)) : null,
   }
@@ -1405,7 +1431,8 @@ export async function fetchDisciplina(slug) {
   return {
     disciplina,
     series,
-    obras: (obras || []).filter((obra) => !obra.serie?.slug),
+    // Sueltas numeradas en el orden de la galería: IL-01, IL-02… (igual que en la página de cada una).
+    obras: numerar((obras || []).filter((obra) => !obra.serie?.slug), null),
     artista: inicio?.artista || null,
     configuracion: inicio?.configuracion || null,
   }
@@ -1441,8 +1468,10 @@ export async function fetchSeriesDestacadas({excluir = ''} = {}) {
 
 function prepararCuadroDestacado(obra) {
   if (!obra?.slug || !imagenDisponible(obra.imagenPrincipal)) return null
+  const numero = obra.serie?.nombre ? Number(obra.numero) || 0 : 0
   return {
-    titulo: obra.titulo || '',
+    titulo: nombrePieza(obra.titulo),
+    codigo: codigoPieza({obra: obra.serie?.nombre, sigla: obra.serie?.sigla, numero}),
     href: `/obras/${obra.slug}`,
     obra: obra.serie?.nombre || '',
     anio: obra.anio ?? null,
@@ -1495,8 +1524,9 @@ export async function fetchCuadrosDestacados() {
         anio,
         altoCm,
         anchoCm,
+        "numero": count(*[_type == "obra" && defined(^.serie._ref) && serie._ref == ^.serie._ref && ${VISIBLE} && coalesce(ordenEnSerie, 999999) < coalesce(^.ordenEnSerie, 999999)]) + 1,
         imagenPrincipal ${imagen},
-        "serie": serie->{ nombre, "slug": slug.current }
+        "serie": serie->{ nombre, "slug": slug.current, sigla }
       }`,
   )
   if (marcadas?.length) return marcadas.map(prepararCuadroDestacado).filter(Boolean)
@@ -1510,8 +1540,9 @@ export async function fetchCuadrosDestacados() {
         anio,
         altoCm,
         anchoCm,
+        "numero": count(*[_type == "obra" && defined(^.serie._ref) && serie._ref == ^.serie._ref && ${VISIBLE} && coalesce(ordenEnSerie, 999999) < coalesce(^.ordenEnSerie, 999999)]) + 1,
         imagenPrincipal ${imagen},
-        "serie": serie->{ "_id": _id, nombre, "slug": slug.current }
+        "serie": serie->{ "_id": _id, nombre, "slug": slug.current, sigla }
       }`,
   )
   const cuadros = []
@@ -1753,6 +1784,7 @@ function prepararSeccionInicio(seccion) {
     titulo: String(seccion.titulo || '').trim(),
     descripcion: String(seccion.descripcion || '').trim(),
     textoBoton: String(seccion.textoBoton || '').trim() || 'Explorar',
+    etiqueta: String(seccion.etiqueta || '').trim(),
     enlace: resolverEnlace(String(seccion.enlace || '').trim()),
     tono: seccion.tono === 'marfil' ? 'marfil' : 'azul',
     usarMiniaturaVideo: seccion.usarMiniaturaVideo === true,
@@ -1765,7 +1797,7 @@ export async function fetchSeccionesInicio() {
   const lista = local
     ? demo.seccionesInicio || []
     : (await client.fetch(
-        `*[_id == "artista"][0].seccionesInicio[]{ _key, titulo, descripcion, textoBoton, enlace, tono, usarMiniaturaVideo, imagen ${imagen} }`,
+        `*[_id == "artista"][0].seccionesInicio[]{ _key, titulo, etiqueta, descripcion, textoBoton, enlace, tono, usarMiniaturaVideo, imagen ${imagen} }`,
       )) || []
   const secciones = lista.map(prepararSeccionInicio).filter((seccion) => seccion.titulo && seccion.enlace)
   if (!secciones.some((seccion) => seccion.usarMiniaturaVideo)) return secciones

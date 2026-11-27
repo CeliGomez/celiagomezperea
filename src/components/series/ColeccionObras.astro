@@ -40,8 +40,8 @@ function proporcion(obra) {
 							)}
 						</figure>
 						<h3 class="cuadro__titulo">{obra.titulo}</h3>
-						{(obra.anio || obra.medidas) && (
-							<p class="cuadro__anio">{[obra.anio, obra.medidas].filter(Boolean).join(' · ')}</p>
+						{(obra.codigo || obra.anio || obra.medidas) && (
+							<p class="cuadro__anio">{[obra.codigo, obra.anio, obra.medidas].filter(Boolean).join(' · ')}</p>
 						)}
 					</a>
 				</li>

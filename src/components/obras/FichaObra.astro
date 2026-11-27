@@ -1,7 +1,16 @@
 ---
 import { rutaSerie, rutas } from '../../lib/rutas.js'
+import { linkWhatsapp, mensajePieza } from '../../lib/piezas.js'
 
-const { obra, whatsapp = '', envio = '', anterior = null, siguiente = null, enSerie = null } = Astro.props
+/*
+	Ficha de una pieza (cuadro o ilustración), al lado del visor.
+	- Arriba: a qué obra pertenece, su número dentro de ella y el código (por ejemplo VVB-03).
+	- Datos (año, técnica, medidas, precio) solo si están cargados.
+	- Consultar: por WhatsApp con el mensaje ya escrito (incluye obra, número, código y link)
+	  o por el formulario de Contacto, con la pieza ya puesta en el mensaje.
+	- Abajo: anterior / siguiente dentro de la misma obra.
+*/
+const { obra, whatsapp = '', envio = '', anterior = null, siguiente = null, enSerie = null, url = '' } = Astro.props
 
 const ESTADOS = {
 	disponible: { marca: '●', texto: 'Disponible', tenue: false },
@@ -13,7 +22,9 @@ const ESTADOS = {
 const estado = ESTADOS[obra?.estado] || null
 const vendida = obra?.estado === 'vendida'
 const serie = obra?.serie?.slug ? obra.serie : enSerie?.serie || null
-const posicion = enSerie?.posicion?.total > 1 ? enSerie.posicion : null
+const hrefSerie = serie?.slug ? rutaSerie(serie.slug) : ''
+const total = enSerie?.posicion?.total || 0
+const tipo = obra?.ilustracion ? 'Ilustración' : 'Cuadro'
 
 function medida(valor) {
 	const numero = Number(valor)
@@ -34,7 +45,6 @@ const precio = precioVisible(obra)
 const ficha = [
 	obra?.anio != null && obra.anio !== '' ? ['Año', String(obra.anio)] : null,
 	obra?.tecnica ? ['Técnica', obra.tecnica] : null,
-	// Alto × ancho en una sola fila, para comparar fácil entre cuadros.
 	alto && ancho ? ['Medidas', `${alto.replace(' cm', '')} × ${ancho}`] : null,
 	alto && !ancho ? ['Alto', alto] : null,
 	ancho && !alto ? ['Ancho', ancho] : null,
@@ -42,106 +52,113 @@ const ficha = [
 	precio ? ['Precio', precio] : null,
 ].filter(Boolean)
 
-function consultaWhatsapp(numero, titulo, anio) {
-	const digitos = String(numero || '').replace(/\D/g, '')
-	if (!digitos || !titulo) return ''
-	const detalle = anio ? ` (${anio})` : ''
-	const texto = `Hola, me interesa la obra '${titulo}'${detalle}. ¿Me pasás más info?`
-	return `https://wa.me/${digitos}?text=${encodeURIComponent(texto)}`
-}
+// Cómo se nombra la pieza en los mensajes: «el cuadro N.º 3 de «Una vez vi blanco» (código VVB-03)».
+const referencia = [
+	serie?.nombre && obra?.numero
+		? `${obra.ilustracion ? 'la ilustración' : 'el cuadro'} N.º ${obra.numero} de «${serie.nombre}»`
+		: `${obra.ilustracion ? 'la ilustración' : 'el cuadro'} «${obra.titulo}»`,
+	obra?.codigo ? `(código ${obra.codigo})` : '',
+]
+	.filter(Boolean)
+	.join(' ')
 
-// Sin WhatsApp, la consulta va al formulario de contacto con la obra ya escrita en el mensaje.
-function consultaFormulario(titulo, anio) {
-	if (!titulo) return ''
-	const detalle = anio ? ` (${anio})` : ''
-	return `${rutas.contacto}?obra=${encodeURIComponent(`${titulo}${detalle}`)}#contacto-form`
-}
-
-const linkWhatsapp = consultaWhatsapp(whatsapp, obra?.titulo, obra?.anio)
-const linkConsulta = linkWhatsapp || consultaFormulario(obra?.titulo, obra?.anio)
-const consultaExterna = Boolean(linkWhatsapp)
-const textoConsulta = vendida ? 'Consultar por obras similares' : estado ? 'Consultar por esta obra' : 'Consultar sobre esta obra'
-const hrefSerie = serie?.slug ? rutaSerie(serie.slug) : ''
+const textoWhatsapp = mensajePieza({
+	titulo: obra?.titulo,
+	obra: serie?.nombre || '',
+	numero: obra?.numero,
+	codigo: obra?.codigo,
+	url,
+	ilustracion: obra?.ilustracion,
+})
+const hrefWhatsapp = linkWhatsapp(whatsapp, textoWhatsapp)
+const hrefFormulario = `${rutas.contacto}?obra=${encodeURIComponent(referencia)}#contacto-form`
+const textoConsulta = vendida ? 'Consultar por obras similares' : 'Consultar por WhatsApp'
 ---
 
-<div class="detalle__info">
-	<div class="detalle__cabeza">
-		{
-			serie?.nombre && hrefSerie ? (
-				<a class="detalle-serie" href={hrefSerie}>{serie.nombre}</a>
-			) : (
-				<p class="label">Obra</p>
-			)
-		}
-		<h1 class="detalle-titulo titulo-obra">{obra.titulo}</h1>
+<div class="ficha">
+	<div class="ficha__cabeza">
+		<p class="ficha__obra">
+			{
+				serie?.nombre && hrefSerie ? (
+					<>
+						<span>{tipo} de la obra</span>
+						<a href={hrefSerie}>{serie.nombre}</a>
+					</>
+				) : (
+					<span>{obra?.ilustracion ? 'Ilustración suelta' : 'Obra'}</span>
+				)
+			}
+		</p>
+
+		<h1 class="ficha__titulo">{obra.titulo}</h1>
+
+		<div class="ficha__ids">
+			{obra?.numero > 0 && serie?.nombre && <span>N.º {obra.numero}{total > 1 ? ` de ${total}` : ''}</span>}
+			{obra?.codigo && <span class="ficha__codigo" title="Código para consultar por esta pieza">Código {obra.codigo}</span>}
+		</div>
 
 		{
-			ficha.length > 0 ? (
-				<dl class="detalle-datos">
+			ficha.length > 0 && (
+				<dl class="ficha__datos">
 					{ficha.map(([etiqueta, valor]) => (
-						<div class="detalle-dato">
+						<div>
 							<dt>{etiqueta}</dt>
 							<dd>{valor}</dd>
 						</div>
 					))}
 				</dl>
-			) : (
-				<p class="detalle-pendiente">Ficha técnica en preparación</p>
 			)
 		}
 
 		{
 			estado && (
-				<p class:list={['detalle-estado', estado.tenue && 'is-tenue']}>
+				<p class:list={['ficha__estado', estado.tenue && 'is-tenue']}>
 					{estado.marca && <span aria-hidden="true">{estado.marca}</span>}
 					{estado.texto}
 				</p>
 			)
 		}
 
-		{obra.descripcionCorta && <p class="detalle-texto">{obra.descripcionCorta}</p>}
+		{obra.descripcionCorta && <p class="ficha__texto">{obra.descripcionCorta}</p>}
+		{envio && <p class="ficha__extra">{envio}</p>}
 
-		{envio && <p class="detalle-extra">{envio}</p>}
-
-		{
-			linkConsulta && (
-				<a
-					class="btn btn-outline detalle-consulta"
-					href={linkConsulta}
-					target={consultaExterna ? '_blank' : undefined}
-					rel={consultaExterna ? 'noopener noreferrer' : undefined}
-				>
-					{textoConsulta}
-					<span class="arrow" aria-hidden="true">→</span>
+		<div class="ficha__consulta">
+			<p class="ficha__consulta-titulo">¿Te interesa esta pieza?</p>
+			<div class="ficha__botones">
+				{
+					hrefWhatsapp && (
+						<a class="btn ficha__btn ficha__btn--whatsapp" href={hrefWhatsapp} target="_blank" rel="noopener noreferrer">
+							<svg viewBox="0 0 24 24" aria-hidden="true">
+								<path d="M12 3.2a8.8 8.8 0 0 0-7.6 13.2L3.2 20.8l4.5-1.2A8.8 8.8 0 1 0 12 3.2Z" />
+								<path d="M9 8.6c.2-.4.5-.4.7-.4h.5c.2 0 .4 0 .5.4l.7 1.6c.1.2 0 .4-.1.6l-.5.6c.6 1.1 1.5 2 2.6 2.6l.6-.5c.2-.1.4-.2.6-.1l1.6.7c.3.1.4.3.4.5v.5c0 .2 0 .5-.4.7-.5.3-1.2.5-1.9.4-2.6-.4-5.2-3-5.6-5.6-.1-.7.1-1.4.3-1.9Z" />
+							</svg>
+							{textoConsulta}
+						</a>
+					)
+				}
+				<a class:list={['btn ficha__btn', hrefWhatsapp ? 'ficha__btn--contorno' : 'ficha__btn--whatsapp']} href={hrefFormulario}>
+					Escribir un mensaje
 				</a>
-			)
-		}
+			</div>
+			{obra?.codigo && <p class="ficha__nota">El mensaje ya incluye el código {obra.codigo}, así Celia sabe de qué pieza le hablás.</p>}
+		</div>
 	</div>
 
 	{
-		(anterior || siguiente || posicion) && (
-			<nav class="detalle-nav" aria-label={serie ? 'Recorrer la serie' : 'Recorrer las obras'}>
-				{posicion && (
-					<p class="detalle-nav__posicion">
-						{posicion.actual} de {posicion.total}
-					</p>
-				)}
+		(anterior || siguiente) && (
+			<nav class="ficha__nav" aria-label={serie ? 'Recorrer la obra' : 'Recorrer las piezas'}>
 				{anterior ? (
-					<a class="detalle-nav__link" href={`/obras/${anterior.slug}`} rel="prev">
-						<span class="detalle-nav__sentido">
-							<span aria-hidden="true">←</span> Anterior
-						</span>
-						<span class="detalle-nav__titulo titulo-obra">{anterior.titulo}</span>
+					<a class="ficha__vecina" href={`/obras/${anterior.slug}`} rel="prev">
+						<span class="ficha__sentido">← Anterior</span>
+						<span class="ficha__vecina-titulo">{anterior.titulo}</span>
 					</a>
 				) : (
 					<span />
 				)}
 				{siguiente && (
-					<a class="detalle-nav__link detalle-nav__link--siguiente" href={`/obras/${siguiente.slug}`} rel="next">
-						<span class="detalle-nav__sentido">
-							Siguiente <span aria-hidden="true">→</span>
-						</span>
-						<span class="detalle-nav__titulo titulo-obra">{siguiente.titulo}</span>
+					<a class="ficha__vecina ficha__vecina--siguiente" href={`/obras/${siguiente.slug}`} rel="next">
+						<span class="ficha__sentido">Siguiente →</span>
+						<span class="ficha__vecina-titulo">{siguiente.titulo}</span>
 					</a>
 				)}
 			</nav>
@@ -150,23 +167,235 @@ const hrefSerie = serie?.slug ? rutaSerie(serie.slug) : ''
 </div>
 
 <style>
-	.detalle-serie {
-		color: var(--azul-medio);
+	.ficha {
+		display: grid;
+		align-content: start;
+		gap: 2.5rem;
+	}
+
+	.ficha__cabeza {
+		display: grid;
+		justify-items: start;
+		gap: 1rem;
+	}
+
+	.ficha__obra {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem 0.6rem;
 		font-family: var(--font-ui);
 		font-size: 0.75rem;
 		font-weight: 500;
-		letter-spacing: 0.16em;
-		line-height: 1.4;
+		letter-spacing: 0.18em;
 		text-transform: uppercase;
-		text-decoration: none;
+		color: color-mix(in srgb, var(--tinta) 60%, transparent);
 	}
 
-	.detalle-serie:hover {
+	.ficha__obra a {
+		color: var(--dorado-oscuro);
+		text-decoration: none;
+		border-bottom: 1px solid currentColor;
+	}
+
+	.ficha__obra a:hover,
+	.ficha__obra a:focus-visible {
 		color: var(--azul-profundo);
 	}
 
-	.detalle-serie:focus-visible {
-		outline: 1px solid var(--azul-medio);
-		outline-offset: 4px;
+	.ficha__titulo {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
+		font-size: clamp(2.5rem, 1.8rem + 2.6vw, 4rem);
+		line-height: 1;
+		color: var(--tinta);
+		text-wrap: balance;
+	}
+
+	.ficha__ids {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem 1.25rem;
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--azul-profundo);
+	}
+
+	.ficha__codigo {
+		padding: 0.3rem 0.6rem;
+		border: 1px solid var(--dorado);
+		color: var(--dorado-oscuro);
+		letter-spacing: 0.16em;
+	}
+
+	.ficha__datos {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem 2rem;
+		width: 100%;
+		margin: 0.5rem 0 0;
+		padding-top: 1.25rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.ficha__datos dt {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, var(--tinta) 55%, transparent);
+	}
+
+	.ficha__datos dd {
+		margin: 0.3rem 0 0;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--tinta);
+	}
+
+	.ficha__estado {
+		display: inline-flex;
+		gap: 0.5rem;
+		font-family: var(--font-ui);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--azul-profundo);
+	}
+
+	.ficha__estado.is-tenue {
+		color: color-mix(in srgb, var(--tinta) 50%, transparent);
+	}
+
+	.ficha__texto,
+	.ficha__extra {
+		max-width: 32rem;
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.7;
+		color: color-mix(in srgb, var(--tinta) 85%, transparent);
+	}
+
+	/* Consulta */
+	.ficha__consulta {
+		display: grid;
+		gap: 0.9rem;
+		width: 100%;
+		margin-top: 0.75rem;
+		padding: 1.5rem;
+		background-color: var(--marfil);
+	}
+
+	.ficha__consulta-titulo {
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		line-height: 1.1;
+		color: var(--azul-profundo);
+	}
+
+	.ficha__botones {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.ficha__btn {
+		gap: 0.6rem;
+		min-height: 3rem;
+		padding-inline: 1.4rem;
+	}
+
+	.ficha__btn svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.4;
+		stroke-linejoin: round;
+	}
+
+	.ficha__btn--whatsapp {
+		border-color: var(--azul-profundo);
+		background-color: var(--azul-profundo);
+		color: var(--blanco-calido);
+	}
+
+	.ficha__btn--whatsapp:hover,
+	.ficha__btn--whatsapp:focus-visible {
+		border-color: var(--azul-medio);
+		background-color: var(--azul-medio);
+	}
+
+	.ficha__btn--contorno {
+		border-color: color-mix(in srgb, var(--tinta) 40%, transparent);
+		color: var(--tinta);
+	}
+
+	.ficha__btn--contorno:hover,
+	.ficha__btn--contorno:focus-visible {
+		border-color: var(--dorado);
+		color: var(--dorado-oscuro);
+	}
+
+	.ficha__nota {
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: color-mix(in srgb, var(--tinta) 65%, transparent);
+	}
+
+	/* Anterior / siguiente */
+	.ficha__nav {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.ficha__vecina {
+		display: grid;
+		gap: 0.3rem;
+		color: var(--tinta);
+		text-decoration: none;
+	}
+
+	.ficha__vecina--siguiente {
+		justify-items: end;
+		text-align: right;
+	}
+
+	.ficha__sentido {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro);
+	}
+
+	.ficha__vecina-titulo {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-size: 1.25rem;
+		line-height: 1.2;
+	}
+
+	.ficha__vecina:hover .ficha__vecina-titulo,
+	.ficha__vecina:focus-visible .ficha__vecina-titulo {
+		color: var(--azul-medio);
+	}
+
+	@media (max-width: 39.99rem) {
+		.ficha__botones {
+			flex-direction: column;
+			align-items: stretch;
+		}
 	}
 </style>

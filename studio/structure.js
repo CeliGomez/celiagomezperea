@@ -25,13 +25,13 @@ function listaDeObras(S, titulo, filtro, plantilla) {
 
 // Elegir una obra y ver/cargar sus piezas (cuadros o ilustraciones).
 function piezasPorObra(S, {titulo, pregunta, filtro, plantilla}) {
+  // Sin schemaType: así esta lista no muestra el botón "+" (desde acá no se crean obras,
+  // solo se elige una para cargar sus piezas).
   return S.documentList()
     .title(pregunta)
-    .schemaType('serie')
     .filter(`_type == "serie" && ${filtro}`)
+    .apiVersion('2026-11-05')
     .defaultOrdering(orden)
-    // Desde acá no se crean obras: solo se elige una para cargar sus piezas.
-    .initialValueTemplates([])
     .menuItems([])
     .child((serieId) =>
       S.documentList()

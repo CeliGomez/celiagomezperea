@@ -1,46 +1,167 @@
 ---
-import Imagen from '../home/Imagen.astro'
+import { urlFor } from '../../lib/sanity.js'
 import { rutas } from '../../lib/rutas.js'
 
-// obras: hermanas de la misma serie, o hasta 3 obras de la misma disciplina si no hay serie.
-const { obras = [], serie = null } = Astro.props
-const titulo = serie?.nombre ? `Más obras de ${serie.nombre}` : 'Otras obras'
-const destino = serie?.href || rutas.obras
-const enlace = serie?.href ? 'Ver la serie' : 'Ver todas las obras'
+/*
+	Al pie de cada pieza: las otras piezas de la misma obra (o, si es suelta, otras de su tipo).
+	Todas en un recuadro de la misma altura, apoyadas sobre una misma línea, con su número.
+*/
+const { obras = [], serie = null, ilustracion = false } = Astro.props
+const titulo = serie?.nombre ? `Más de «${serie.nombre}»` : ilustracion ? 'Otras ilustraciones' : 'Otras obras'
+const destino = serie?.href || (ilustracion ? rutas.ilustraciones : rutas.cuadros)
+const enlace = serie?.href ? 'Ver la obra completa' : ilustracion ? 'Ver todas las ilustraciones' : 'Ver todos los cuadros'
+const lista = obras.slice(0, 8)
 ---
 
 {
-	obras.length > 0 && (
-		<section class="mas-obras contenedor" aria-labelledby="mas-obras-titulo">
-			<div class="mas-obras__cabecera grilla">
-				<h2 id="mas-obras-titulo" class="titulo-seccion">
-					{titulo}
-				</h2>
-				<a class="enlace" href={destino}>
-					{enlace} <span class="arrow" aria-hidden="true">→</span>
-				</a>
+	lista.length > 0 && (
+		<section class="mas" aria-labelledby="mas-titulo">
+			<div class="contenedor">
+				<div class="mas__cabecera">
+					<h2 id="mas-titulo" class="mas__titulo">
+						{titulo}
+					</h2>
+					<a class="mas__enlace" href={destino}>
+						{enlace} <span aria-hidden="true">→</span>
+					</a>
+				</div>
+				<ul class="mas__lista">
+					{lista.map((obra) => (
+						<li>
+							<a class="mas__pieza" href={`/obras/${obra.slug}`}>
+								<span class="mas__marco">
+									{obra.imagen && (
+										<img
+											src={urlFor(obra.imagen).width(700).url()}
+											alt={obra.imagen?.alt || obra.titulo}
+											width={obra.relacion?.ancho}
+											height={obra.relacion?.alto}
+											loading="lazy"
+											decoding="async"
+										/>
+									)}
+								</span>
+								<span class="mas__pie">
+									{obra.numero && <span class="mas__numero">N.º {obra.numero}</span>}
+									<span class="mas__nombre">{obra.titulo}</span>
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
 			</div>
-			<ul class="mas-obras__lista grilla">
-				{obras.map((obra, indice) => (
-					<li class="mas-obras__item" style={`--movil: ${indice % 2 === 1 ? '3 / 5' : '1 / 3'}`}>
-						<a class="mas-obras__link" href={`/obras/${obra.slug}`}>
-							<Imagen
-								source={obra.imagen}
-								alt={obra.imagen?.alt || obra.titulo}
-								titulo={obra.titulo}
-								width={700}
-								marco="obra"
-								sizes="(min-width: 64rem) min(28vw, 420px), 46vw"
-								transicion={`obra-${obra.slug}`}
-							/>
-							<p class="mas-obras__titulo titulo-obra">{obra.titulo}</p>
-							{(obra.anio || (!serie && obra.disciplina)) && (
-								<p class="mas-obras__meta">{[obra.anio, !serie ? obra.disciplina : ''].filter(Boolean).join(' · ')}</p>
-							)}
-						</a>
-					</li>
-				))}
-			</ul>
 		</section>
 	)
 }
+
+<style>
+	.mas {
+		padding-block: clamp(3.5rem, 7vw, 5.5rem);
+		background-color: var(--marfil);
+	}
+
+	.mas__cabecera {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem 2rem;
+		margin-bottom: clamp(2rem, 4vw, 3rem);
+	}
+
+	.mas__titulo {
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+		line-height: 1.05;
+		color: var(--tinta);
+	}
+
+	.mas__enlace {
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--azul-profundo);
+		text-decoration: none;
+		border-bottom: 1px solid var(--dorado);
+		padding-bottom: 0.2rem;
+	}
+
+	.mas__lista {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 2rem 1.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.mas__pieza {
+		display: grid;
+		gap: 0.9rem;
+		color: var(--tinta);
+		text-decoration: none;
+	}
+
+	.mas__marco {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		height: clamp(10rem, 40vw, 16rem);
+	}
+
+	.mas__marco img {
+		display: block;
+		width: auto;
+		max-width: 100%;
+		height: auto;
+		max-height: 100%;
+		filter: drop-shadow(0 12px 16px rgb(25 25 25 / 0.16));
+		transition: transform 0.4s var(--ease);
+	}
+
+	.mas__pie {
+		display: grid;
+		gap: 0.25rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+	}
+
+	.mas__numero {
+		font-family: var(--font-ui);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--dorado-oscuro);
+	}
+
+	.mas__nombre {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-size: 1.2rem;
+		line-height: 1.15;
+	}
+
+	.mas__pieza:hover .mas__marco img {
+		transform: translateY(-4px);
+	}
+
+	.mas__pieza:focus-visible {
+		outline: 1px solid var(--dorado);
+		outline-offset: 6px;
+	}
+
+	@media (min-width: 64rem) {
+		.mas__lista {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 3rem 2.5rem;
+		}
+
+		.mas__marco {
+			height: clamp(14rem, 16vw, 18rem);
+		}
+	}
+</style>

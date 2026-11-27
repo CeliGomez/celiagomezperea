@@ -17,6 +17,14 @@ export const serie = defineType({
       validation: (rule) => rule.required().error('Escribí el nombre de la obra.'),
     }),
     defineField({
+      name: 'sigla',
+      title: 'Sigla de la obra (opcional)',
+      type: 'string',
+      description:
+        'Identifica cada cuadro en la web y en los mensajes de WhatsApp: «UVB-03» es el cuadro 3 de esta obra. Si la dejás vacía, se arma sola con las iniciales del nombre. Hasta 4 letras.',
+      validation: (rule) => rule.max(4).error('Usá hasta 4 letras.'),
+    }),
+    defineField({
       name: 'slug',
       title: 'Dirección de la página',
       type: 'slug',
