@@ -57,7 +57,7 @@ export function nombrePieza(titulo) {
 	return tituloPropio(titulo) || 'Sin título'
 }
 
-// Mensaje de WhatsApp ya escrito para consultar por una pieza.
+// Mensaje de WhatsApp ya escrito para consultar por una pieza. Al final va el link, aclarado, para que Celia vea la pieza.
 export function linkWhatsapp(numero, texto = '') {
 	const digitos = String(numero || '').replace(/\D/g, '')
 	if (!digitos) return ''
@@ -75,7 +75,7 @@ export function mensajePieza({ titulo = '', obra = '', numero = 0, codigo = '', 
 	return [
 		`Hola Celia, te escribo desde tu web. Vi ${partes.join(' ').replace(' ,', ',')} y me interesa.`,
 		'¿Está disponible? ¿Me pasás más información?',
-		url,
+		url ? `\nLink ${ilustracion ? 'de la ilustración' : 'del cuadro'}: ${url}` : '',
 	]
 		.filter(Boolean)
 		.join('\n')

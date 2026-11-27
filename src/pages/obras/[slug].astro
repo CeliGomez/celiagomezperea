@@ -103,8 +103,11 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 			youtube={configuracion?.youtube}
 			datos={datos}
 			seccion={ficha.obra.ilustracion ? 'ilustraciones' : 'cuadros'}
+			heroAzul
 		>
 			<div class="pieza-pagina">
+				{/* Sala azul: la pieza «colgada» sobre la pared azul y su ficha al lado. */}
+				<section class="pieza-sala ctx-azul ctx-azul--profundo textura">
 				{/* Miga: sección › obra */}
 				<nav class="pieza-miga contenedor" aria-label="Ubicación">
 					<a href={volver.href}>{volver.texto}</a>
@@ -129,6 +132,7 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 						<p class="pieza__ayuda">Tocá la imagen para verla en grande.</p>
 					</div>
 					<FichaObra
+						oscura
 						obra={ficha.obra}
 						whatsapp={configuracion?.whatsapp}
 						envio={configuracion?.envioColeccion || ''}
@@ -138,6 +142,7 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 						url={new URL(Astro.url.pathname, Astro.site ?? Astro.url).href}
 					/>
 				</article>
+				</section>
 
 				<MasObras obras={ficha.relacionadas} serie={ficha.enSerie?.serie || null} ilustracion={ficha.obra.ilustracion} />
 			</div>
@@ -147,8 +152,8 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 
 <style>
 	/* ——— Página de una pieza ——— */
-	.pieza-pagina {
-		padding-top: clamp(1.5rem, 3vw, 2.5rem);
+	.pieza-sala {
+		padding-top: 7rem;
 	}
 
 	.pieza-miga {
@@ -161,17 +166,17 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 		font-weight: 500;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: color-mix(in srgb, var(--tinta) 45%, transparent);
+		color: var(--azul-bruma);
 	}
 
 	.pieza-miga a {
-		color: var(--azul-profundo);
+		color: var(--blanco-calido);
 		text-decoration: none;
 	}
 
 	.pieza-miga a:hover,
 	.pieza-miga a:focus-visible {
-		color: var(--dorado-oscuro);
+		color: var(--dorado);
 	}
 
 	.pieza {
@@ -180,38 +185,37 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 		padding-bottom: clamp(3.5rem, 7vw, 6rem);
 	}
 
-	/* La pieza sobre una «pared» crema con textura, colgada con sombra. */
+	/* La pieza sobre la pared azul, con una sombra profunda. */
 	.pieza__visor :global(.visor__escena) {
-		min-height: clamp(20rem, 60vh, 44rem);
-		padding: clamp(1.5rem, 5vw, 4.5rem);
-		background-color: var(--marfil);
-		background-image: var(--textura-pigmento);
-		background-size: 720px 720px;
-		background-blend-mode: soft-light;
+		min-height: clamp(18rem, 55vh, 42rem);
+		padding: 0;
+		background: transparent;
 	}
 
 	.pieza__visor :global(.visor__img) {
-		max-height: 72svh;
-		filter: drop-shadow(0 24px 30px rgb(25 25 25 / 0.22));
+		max-height: 74svh;
+		filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.5));
+	}
+
+	.pieza__visor :global(.visor__mini) {
+		outline-color: var(--dorado);
 	}
 
 	.pieza__ayuda {
-		margin-top: 0.75rem;
+		margin-top: 1rem;
 		font-family: var(--font-ui);
 		font-size: 0.6875rem;
 		font-weight: 500;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: color-mix(in srgb, var(--tinta) 45%, transparent);
-	}
-
-	@media (hover: none) {
-		.pieza__ayuda {
-			display: block;
-		}
+		color: var(--azul-bruma);
 	}
 
 	@media (min-width: 64rem) {
+		.pieza-sala {
+			padding-top: 8.5rem;
+		}
+
 		.pieza {
 			grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
 			align-items: start;

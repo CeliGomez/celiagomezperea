@@ -10,7 +10,7 @@ import { linkWhatsapp, mensajePieza } from '../../lib/piezas.js'
 	  o por el formulario de Contacto, con la pieza ya puesta en el mensaje.
 	- Abajo: anterior / siguiente dentro de la misma obra.
 */
-const { obra, whatsapp = '', envio = '', anterior = null, siguiente = null, enSerie = null, url = '' } = Astro.props
+const { oscura = false, obra, whatsapp = '', envio = '', anterior = null, siguiente = null, enSerie = null, url = '' } = Astro.props
 
 const ESTADOS = {
 	disponible: { marca: '●', texto: 'Disponible', tenue: false },
@@ -78,7 +78,7 @@ const nombreVecina = (vecina, numero) =>
 const textoConsulta = vendida ? 'Consultar por obras similares' : 'Consultar por WhatsApp'
 ---
 
-<div class="ficha">
+<div class:list={['ficha', oscura && 'ficha--oscura']}>
 	<div class="ficha__cabeza">
 		<p class="ficha__obra">
 			{
@@ -393,6 +393,59 @@ const textoConsulta = vendida ? 'Consultar por obras similares' : 'Consultar por
 	.ficha__vecina:hover .ficha__vecina-titulo,
 	.ficha__vecina:focus-visible .ficha__vecina-titulo {
 		color: var(--azul-medio);
+	}
+
+	/* ——— Sobre la pared azul ——— */
+	.ficha--oscura .ficha__obra,
+	.ficha--oscura .ficha__datos dt,
+	.ficha--oscura .ficha__estado.is-tenue {
+		color: var(--azul-bruma);
+	}
+
+	.ficha--oscura .ficha__obra a {
+		color: var(--dorado);
+	}
+
+	.ficha--oscura .ficha__obra a:hover,
+	.ficha--oscura .ficha__obra a:focus-visible {
+		color: var(--blanco-calido);
+	}
+
+	.ficha--oscura .ficha__titulo,
+	.ficha--oscura .ficha__ids,
+	.ficha--oscura .ficha__datos dd,
+	.ficha--oscura .ficha__estado,
+	.ficha--oscura .ficha__vecina {
+		color: var(--blanco-calido);
+	}
+
+	.ficha--oscura .ficha__codigo {
+		color: var(--dorado);
+	}
+
+	.ficha--oscura .ficha__texto,
+	.ficha--oscura .ficha__extra {
+		color: color-mix(in srgb, var(--blanco-calido) 85%, transparent);
+	}
+
+	.ficha--oscura .ficha__datos,
+	.ficha--oscura .ficha__nav {
+		border-top-color: rgb(212 161 78 / 0.35);
+	}
+
+	.ficha--oscura .ficha__sentido {
+		color: var(--dorado);
+	}
+
+	.ficha--oscura .ficha__vecina:hover .ficha__vecina-titulo,
+	.ficha--oscura .ficha__vecina:focus-visible .ficha__vecina-titulo {
+		color: var(--dorado);
+	}
+
+	/* La tarjeta de consulta queda clara: es lo que más se destaca sobre el azul. */
+	.ficha--oscura .ficha__consulta {
+		background-color: var(--blanco-calido);
+		box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.6);
 	}
 
 	@media (max-width: 39.99rem) {
