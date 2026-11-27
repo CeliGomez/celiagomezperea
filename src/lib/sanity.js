@@ -5,7 +5,7 @@ import {createImageUrlBuilder} from '@sanity/image-url'
 import * as demo from '../data/demo.js'
 import {htmlDePortable, textoDePortable} from './texto.js'
 import {resolverEnlace, rutaDisciplina, rutaSerie} from './rutas.js'
-import {codigoPieza, nombrePieza} from './piezas.js'
+import {altPieza, codigoPieza, nombrePieza} from './piezas.js'
 
 const API_VERSION = '2026-11-05'
 const COLOR_SUPERFICIE = '#f2e9e0'
@@ -750,6 +750,8 @@ function paginasDe(vistas, artista, configuracion) {
   return vistas.map((obra, indice) => {
     const enSerie = vecinasEnSerie(vistas, obra)
     const numero = enSerie ? enSerie.posicion.actual : sueltas.indexOf(obra) + 1
+    const ilustracion = obra.disciplina?.slug === PAPEL
+    const datosAlt = {titulo: obra.titulo, obra: enSerie?.serie?.nombre || '', numero, ilustracion}
     return {
     params: { slug: obra.slug },
     props: {
@@ -757,7 +759,7 @@ function paginasDe(vistas, artista, configuracion) {
         titulo: obra.titulo,
         numero,
         codigo: codigoPieza({obra: enSerie?.serie?.nombre || '', sigla: obra.serie?.sigla, numero}),
-        ilustracion: obra.disciplina?.slug === PAPEL,
+        ilustracion,
         slug: obra.slug,
         anio: obra.anio,
         tecnica: obra.tecnica,
@@ -766,7 +768,10 @@ function paginasDe(vistas, artista, configuracion) {
         categoria: obra.categoria,
         proyecto: obra.proyecto,
         descripcionCorta: obra.descripcionCorta,
-        imagenes: obra.imagenes,
+        imagenes: (obra.imagenes || []).map((foto, orden) => ({
+          ...foto,
+          alt: orden === 0 ? altPieza(foto.alt, datosAlt) : altPieza(foto.alt, datosAlt) + ` (foto ${orden + 1})`,
+        })),
         relacion: obra.relacion,
         serie: obra.serie?.slug ? {nombre: obra.serie.nombre || '', slug: obra.serie.slug} : null,
         altoCm: obra.altoCm,
@@ -1298,11 +1303,22 @@ function obrasDeSerieDemo(slug) {
 
 // Número y código de cada pieza dentro de su obra (en el orden «Lugar dentro de la obra»).
 function numerar(obras, serie) {
-  return obras.map((obra, indice) => ({
-    ...obra,
-    numero: indice + 1,
-    codigo: codigoPieza({obra: serie?.nombre || '', sigla: serie?.sigla, numero: indice + 1}),
-  }))
+  return obras.map((obra, indice) => {
+    const numero = indice + 1
+    const datos = {
+      titulo: obra.titulo,
+      obra: serie?.nombre || '',
+      numero,
+      ilustracion: obra.disciplina?.slug === PAPEL || serie?.disciplina?.slug === PAPEL,
+    }
+    return {
+      ...obra,
+      numero,
+      codigo: codigoPieza({obra: serie?.nombre || '', sigla: serie?.sigla, numero}),
+      // Texto alternativo armado con la obra y el número (no el nombre del archivo).
+      imagen: obra.imagen ? {...obra.imagen, alt: altPieza(obra.imagen.alt, datos)} : obra.imagen,
+    }
+  })
 }
 
 function serieVecina(serie) {
@@ -1471,6 +1487,13 @@ function prepararCuadroDestacado(obra) {
   const numero = obra.serie?.nombre ? Number(obra.numero) || 0 : 0
   return {
     titulo: nombrePieza(obra.titulo),
+    numero,
+    alt: altPieza(obra.imagenPrincipal?.alt, {
+      titulo: obra.titulo,
+      obra: obra.serie?.nombre || '',
+      numero,
+      ilustracion: obra.disciplina?.slug === PAPEL,
+    }),
     codigo: codigoPieza({obra: obra.serie?.nombre, sigla: obra.serie?.sigla, numero}),
     href: `/obras/${obra.slug}`,
     obra: obra.serie?.nombre || '',
@@ -1526,7 +1549,8 @@ export async function fetchCuadrosDestacados() {
         anchoCm,
         "numero": count(*[_type == "obra" && defined(^.serie._ref) && serie._ref == ^.serie._ref && ${VISIBLE} && coalesce(ordenEnSerie, 999999) < coalesce(^.ordenEnSerie, 999999)]) + 1,
         imagenPrincipal ${imagen},
-        "serie": serie->{ nombre, "slug": slug.current, sigla }
+        "serie": serie->{ nombre, "slug": slug.current, sigla },
+        "disciplina": coalesce(disciplina->{ "slug": slug.current }, serie->disciplina->{ "slug": slug.current })
       }`,
   )
   if (marcadas?.length) return marcadas.map(prepararCuadroDestacado).filter(Boolean)
@@ -1542,7 +1566,8 @@ export async function fetchCuadrosDestacados() {
         anchoCm,
         "numero": count(*[_type == "obra" && defined(^.serie._ref) && serie._ref == ^.serie._ref && ${VISIBLE} && coalesce(ordenEnSerie, 999999) < coalesce(^.ordenEnSerie, 999999)]) + 1,
         imagenPrincipal ${imagen},
-        "serie": serie->{ "_id": _id, nombre, "slug": slug.current, sigla }
+        "serie": serie->{ "_id": _id, nombre, "slug": slug.current, sigla },
+        "disciplina": coalesce(disciplina->{ "slug": slug.current }, serie->disciplina->{ "slug": slug.current })
       }`,
   )
   const cuadros = []

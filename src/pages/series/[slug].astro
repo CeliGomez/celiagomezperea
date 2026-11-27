@@ -14,7 +14,6 @@ const serie = await fetchSerie(Astro.params.slug)
 const { artista, configuracion } = await fetchInicio()
 const nombre = artista?.nombre || ''
 const titulo = serie ? (nombre ? `${serie.nombre} — ${nombre}` : serie.nombre) : 'Serie'
-const descripcion = serie?.descripcion || (serie ? `Serie ${serie.nombre}.` : 'Serie')
 // Las obras de ilustración vuelven a Ilustraciones; las de cuadros, a Cuadros.
 const esIlustracion = serie?.disciplina?.slug === 'obras-sobre-papel'
 const seccion = esIlustracion
@@ -23,6 +22,10 @@ const seccion = esIlustracion
 const cantidad = serie?.obras?.length || 0
 const unidad = esIlustracion ? (cantidad === 1 ? 'ilustración' : 'ilustraciones') : cantidad === 1 ? 'cuadro' : 'cuadros'
 const meta = [cantidad ? `${cantidad} ${unidad}` : '', serie?.anio, serie?.tecnicaGeneral].filter(Boolean)
+// Sin texto cargado: «Una vez vi blanco, obra de Celia Gómez Perea: 9 cuadros.»
+const descripcion =
+	serie?.descripcion ||
+	(serie ? `${serie.nombre}, obra de ${nombre || 'la artista'}${cantidad ? `: ${cantidad} ${unidad}` : ''}.` : 'Serie')
 ---
 
 {

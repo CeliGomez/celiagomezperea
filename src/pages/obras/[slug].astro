@@ -6,6 +6,7 @@ import MasObras from '../../components/obras/MasObras.astro'
 import Disciplina from '../../components/obras/Disciplina.astro'
 import { fetchDisciplina, fetchDisciplinas, fetchPaginasObra } from '../../lib/sanity.js'
 import { rutas } from '../../lib/rutas.js'
+import { describirPieza } from '../../lib/piezas.js'
 
 export async function getStaticPaths() {
 	const obras = await fetchPaginasObra()
@@ -51,9 +52,24 @@ const titulo = esDisciplina
 		]
 			.filter(Boolean)
 			.join(' — ')
+// «Cuadro N.º 3 de la obra «Una vez vi blanco», de Celia Gómez Perea. Código VVB-03.»
+const pieza = esDisciplina
+	? ''
+	: describirPieza({
+			titulo: ficha.obra.titulo,
+			obra: ficha.enSerie?.serie?.nombre || '',
+			numero: ficha.obra.numero,
+			ilustracion: ficha.obra.ilustracion,
+		})
 const descripcion = esDisciplina
 	? paginaDisciplina?.disciplina?.descripcion || titulo
-	: ficha.obra.descripcionCorta || (artista?.nombre ? `${ficha.obra.titulo}, obra de ${artista.nombre}.` : ficha.obra.titulo)
+	: ficha.obra.descripcionCorta ||
+		[
+			artista?.nombre ? `${pieza}, de ${artista.nombre}.` : `${pieza}.`,
+			ficha.obra.codigo ? `Código ${ficha.obra.codigo}.` : '',
+		]
+			.filter(Boolean)
+			.join(' ')
 // Miga de la pieza: vuelve a Cuadros o a Ilustraciones, y a su obra.
 const volver = ficha?.obra?.ilustracion
 	? { href: rutas.ilustraciones, texto: 'Ilustraciones' }
@@ -62,7 +78,7 @@ const datos = !esDisciplina && ficha?.obra?.titulo
 	? {
 			'@context': 'https://schema.org',
 			'@type': 'VisualArtwork',
-			name: ficha.obra.titulo,
+			name: ficha.obra.titulo === 'Sin título' ? pieza : ficha.obra.titulo,
 			...(artista?.nombre ? { creator: { '@type': 'Person', name: artista.nombre } } : {}),
 			...(ficha.obra.imagenes?.[0]?.src ? { image: new URL(ficha.obra.imagenes[0].src, Astro.site ?? Astro.url).href } : {}),
 			...(ficha.obra.anio ? { dateCreated: String(ficha.obra.anio) } : {}),

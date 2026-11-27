@@ -57,6 +57,27 @@ export function nombrePieza(titulo) {
 	return tituloPropio(titulo) || 'Sin título'
 }
 
+// Cómo se describe una pieza para quien no ve la imagen (lectores de pantalla) y para Google.
+// «Cuadro N.º 3 de la obra «Una vez vi blanco»» · con nombre propio: «Raíz azul», cuadro N.º 3 de…
+export function describirPieza({ titulo = '', obra = '', numero = 0, ilustracion = false } = {}) {
+	const tipo = ilustracion ? 'ilustración' : 'cuadro'
+	const nombre = tituloPropio(titulo)
+	const conNumero = numero > 0 ? `${tipo} N.º ${numero}` : tipo
+	const lugar = obra ? `${conNumero} de la obra «${obra}»` : conNumero
+	const texto = nombre ? `«${nombre}», ${lugar}` : lugar
+	return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+// Texto alternativo de la foto de una pieza. Si en Sanity se escribió una descripción de verdad, va esa.
+// Si quedó un nombre de archivo («unavez», «cosmo1») o el mismo nombre de la obra, se arma solo.
+export function altPieza(alt, datos = {}) {
+	const propio = tituloPropio(alt)
+	const repetido = [datos.obra, datos.titulo].some(
+		(valor) => valor && propio.toLowerCase() === String(valor).trim().toLowerCase(),
+	)
+	return propio && !repetido ? propio : describirPieza(datos)
+}
+
 // Mensaje de WhatsApp ya escrito para consultar por una pieza. Al final va el link, aclarado, para que Celia vea la pieza.
 export function linkWhatsapp(numero, texto = '') {
 	const digitos = String(numero || '').replace(/\D/g, '')

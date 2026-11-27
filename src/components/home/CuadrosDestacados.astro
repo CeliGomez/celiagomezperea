@@ -13,6 +13,7 @@ import { rutas } from '../../lib/rutas.js'
 */
 const { cuadros = [], fondo = null } = Astro.props
 const fondoSrc = fondo?.imagen ? urlFor(fondo.imagen).width(1800).url() : ''
+const sinNombre = (cuadro) => cuadro.titulo === 'Sin título' && Boolean(cuadro.obra)
 ---
 
 {
@@ -56,7 +57,7 @@ const fondoSrc = fondo?.imagen ? urlFor(fondo.imagen).width(1800).url() : ''
 							<span class="cuadros-destacados__cuadro">
 								<img
 									src={urlFor(cuadro.imagen).width(1200).url()}
-									alt={cuadro.imagen?.alt || cuadro.titulo}
+									alt={cuadro.alt || cuadro.titulo}
 									width={cuadro.relacion?.ancho}
 									height={cuadro.relacion?.alto}
 									loading="lazy"
@@ -64,9 +65,17 @@ const fondoSrc = fondo?.imagen ? urlFor(fondo.imagen).width(1800).url() : ''
 								/>
 							</span>
 							<span class="cuadros-destacados__pie">
-								<span class="cuadros-destacados__titulo">{cuadro.titulo}</span>
+								{/* Sin nombre propio, el título es la obra y abajo va su número. */}
+								<span class="cuadros-destacados__titulo">{sinNombre(cuadro) ? cuadro.obra : cuadro.titulo}</span>
 								<span class="cuadros-destacados__datos">
-									{[cuadro.obra, cuadro.codigo, cuadro.anio, cuadro.dimensiones].filter(Boolean).join(' · ')}
+									{[
+										sinNombre(cuadro) ? (cuadro.numero > 0 ? `N.º ${cuadro.numero}` : '') : cuadro.obra,
+										cuadro.codigo,
+										cuadro.anio,
+										cuadro.dimensiones,
+									]
+										.filter(Boolean)
+										.join(' · ')}
 								</span>
 							</span>
 						</a>

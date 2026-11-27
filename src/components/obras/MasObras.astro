@@ -1,6 +1,7 @@
 ---
 import { urlFor } from '../../lib/sanity.js'
 import { rutas } from '../../lib/rutas.js'
+import { altPieza } from '../../lib/piezas.js'
 
 /*
 	Al pie de cada pieza: las otras piezas de la misma obra (o, si es suelta, otras de su tipo).
@@ -33,7 +34,7 @@ const lista = obras.slice(0, 8)
 									{obra.imagen && (
 										<img
 											src={urlFor(obra.imagen).width(700).url()}
-											alt={obra.imagen?.alt || obra.titulo}
+											alt={altPieza(obra.imagen?.alt, { titulo: obra.titulo, obra: serie?.nombre || '', numero: obra.numero, ilustracion })}
 											width={obra.relacion?.ancho}
 											height={obra.relacion?.alto}
 											loading="lazy"
