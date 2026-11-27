@@ -6,7 +6,7 @@ import { textoDePortable } from '../lib/texto.js'
 
 const { artista, contacto } = await fetchSobreMi()
 const descripcion = artista.bioCorta || textoDePortable(artista.bioCompleta).slice(0, 200) || 'Biografía y trayectoria.'
-const titulo = artista.nombre ? `La artista — ${artista.nombre}` : 'La artista'
+const titulo = artista.nombre ? `Sobre mí — ${artista.nombre}` : 'Sobre mí'
 const mismos = [contacto.instagram, contacto.vimeo, contacto.youtube].filter(Boolean)
 const datos = artista.nombre
 	? {

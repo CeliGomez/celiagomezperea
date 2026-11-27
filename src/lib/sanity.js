@@ -1058,7 +1058,9 @@ function armarContacto(artista, configuracion) {
 		},
 		contacto: {
 			...datosContacto(configuracion),
-			foto: fotoRecorte(artista?.fotoTaller, 1200, 900),
+			foto: artista?.fotoContacto
+				? fotoRecorte(artista.fotoContacto, 960, 1280)
+				: fotoRecorte(artista?.fotoTaller, 1200, 900),
 		},
 	}
 }

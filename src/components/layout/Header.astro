@@ -26,7 +26,7 @@ const nav = [
 		activo: seccion ? seccion === 'ilustraciones' : pathname === rutas.ilustraciones,
 	},
 	{ id: 'audiovisual', href: rutas.audiovisual, label: 'Audiovisual', activo: enSeccion('/audiovisual') },
-	{ id: 'sobre', href: rutas.sobreMi, label: 'La artista', activo: enSeccion('/sobre-mi') },
+	{ id: 'sobre', href: rutas.sobreMi, label: 'Sobre mí', activo: enSeccion('/sobre-mi') },
 	{ id: 'contacto', href: rutas.contacto, label: 'Contacto', activo: enSeccion('/contacto') },
 ]
 
@@ -63,12 +63,14 @@ const redes = [
 
 		<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-menu">
 			<span data-menu-texto>Menú</span>
+			<span class="menu-toggle__icono" aria-hidden="true"><span></span><span></span></span>
 		</button>
 	</div>
 
+	<div class="menu-velo" data-menu-velo hidden></div>
 	<div
 		id="site-menu"
-		class="menu-panel ctx-azul ctx-azul--profundo textura"
+		class="menu-panel ctx-azul ctx-azul--profundo"
 		data-menu-panel
 		hidden
 		role="dialog"
@@ -85,7 +87,8 @@ const redes = [
 								class:list={['menu-link', { 'is-active': item.activo }]}
 								aria-current={item.activo ? 'page' : undefined}
 							>
-								{item.label}
+								<span>{item.label}</span>
+								<span class="menu-link__flecha" aria-hidden="true">→</span>
 							</a>
 						</li>
 					))
@@ -116,6 +119,7 @@ const redes = [
 		const toggle = header.querySelector('[data-menu-toggle]')
 		const texto = header.querySelector('[data-menu-texto]')
 		const panel = header.querySelector('[data-menu-panel]')
+		const velo = header.querySelector('[data-menu-velo]')
 		const desktop = window.matchMedia('(min-width: 64rem)')
 
 		const focables = () => {
@@ -129,6 +133,7 @@ const redes = [
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
 			if (texto) texto.textContent = open ? 'Cerrar' : 'Menú'
 			panel.hidden = !open
+			if (velo) velo.hidden = !open
 			document.body.classList.toggle('menu-open', open)
 			header.classList.toggle('is-open', open)
 			document.querySelector('main')?.toggleAttribute('inert', open)
@@ -154,6 +159,13 @@ const redes = [
 
 		toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'))
 		toggle?.addEventListener('keydown', atrapar)
+		velo?.addEventListener('click', () => setOpen(false))
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
+				setOpen(false)
+				toggle.focus()
+			}
+		})
 		panel?.addEventListener('keydown', atrapar)
 		panel?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)))
 		desktop.addEventListener('change', (event) => {
@@ -322,8 +334,8 @@ const redes = [
 	}
 
 	.site-header.is-open::before {
-		background-color: transparent;
-		border-bottom-color: transparent;
+		background-color: var(--azul-profundo);
+		border-bottom-color: rgb(212 161 78 / 0.35);
 		backdrop-filter: none;
 	}
 
@@ -469,10 +481,12 @@ const redes = [
 		color: var(--dorado-oscuro);
 	}
 
+	/* Botón del menú: la palabra y dos líneas finas que se cruzan al abrir. */
 	.menu-toggle {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
+		gap: 0.75rem;
 		min-height: 2.75rem;
 		margin-left: auto;
 		padding: 0;
@@ -480,7 +494,7 @@ const redes = [
 		background: transparent;
 		color: var(--color-ink);
 		font-family: var(--font-ui);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 500;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
@@ -493,48 +507,133 @@ const redes = [
 		inset: 0 -0.75rem;
 	}
 
-	/* Panel móvil: pantalla completa en azul profundo con textura. */
+	.menu-toggle__icono {
+		position: relative;
+		display: block;
+		width: 1.4rem;
+		height: 0.6rem;
+	}
+
+	.menu-toggle__icono span {
+		position: absolute;
+		left: 0;
+		width: 100%;
+		height: 1px;
+		background-color: currentColor;
+		transition:
+			transform 0.35s var(--ease),
+			top 0.35s var(--ease);
+	}
+
+	.menu-toggle__icono span:first-child {
+		top: 0;
+	}
+
+	.menu-toggle__icono span:last-child {
+		top: 100%;
+		width: 70%;
+		left: 30%;
+	}
+
+	.menu-toggle[aria-expanded='true'] .menu-toggle__icono span:first-child {
+		top: 50%;
+		transform: rotate(45deg);
+	}
+
+	.menu-toggle[aria-expanded='true'] .menu-toggle__icono span:last-child {
+		top: 50%;
+		left: 0;
+		width: 100%;
+		transform: rotate(-45deg);
+	}
+
+	/* Velo sobre la página mientras el menú está abierto (tocarlo cierra el menú). */
+	.menu-velo[hidden] {
+		display: none;
+	}
+
+	.menu-velo {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		background-color: rgb(10 22 32 / 0.45);
+		animation: menu-velo 0.35s var(--ease) both;
+	}
+
+	/* Panel móvil: baja desde la barra y ocupa solo lo que necesita. */
 	.menu-panel[hidden] {
 		display: none;
 	}
 
 	.menu-panel:not([hidden]) {
-		position: fixed;
-		inset: 0;
+		position: absolute;
+		top: var(--alto-barra);
+		left: 0;
+		right: 0;
 		z-index: 1;
-		display: flex;
-		padding: calc(var(--alto-barra) + 1.5rem) 0 2.5rem;
+		max-height: calc(100svh - var(--alto-barra));
+		padding: 0.5rem 0 1.5rem;
 		overflow-y: auto;
+		background-color: var(--azul-profundo);
+		border-bottom: 1px solid rgb(212 161 78 / 0.45);
+		box-shadow: 0 24px 40px -20px rgb(0 0 0 / 0.5);
+		animation: menu-baja 0.4s var(--ease) both;
+	}
+
+	@keyframes menu-baja {
+		from {
+			opacity: 0;
+			transform: translateY(-0.75rem);
+		}
+	}
+
+	@keyframes menu-velo {
+		from {
+			opacity: 0;
+		}
 	}
 
 	.menu-panel__nav {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		gap: 3rem;
+		display: grid;
+		gap: 1.25rem;
 	}
 
 	.menu-lista > li + li {
-		border-top: 1px solid var(--color-line);
+		border-top: 1px solid rgb(255 255 255 / 0.1);
 	}
 
 	.menu-link {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 0.75rem;
 		width: 100%;
 		margin: 0;
-		padding: 0.7rem 0;
+		padding: 1rem 0;
 		border: 0;
 		background: none;
 		color: var(--blanco-calido);
-		font-family: var(--font-display);
-		font-size: clamp(2rem, 9vw, 2.75rem);
+		font-family: var(--font-ui);
+		font-size: 0.875rem;
 		font-weight: 500;
-		line-height: 1.15;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
 		text-align: left;
 		text-decoration: none;
 		cursor: pointer;
+	}
+
+	.menu-link__flecha {
+		color: rgb(255 255 255 / 0.35);
+		transition:
+			transform 0.3s var(--ease),
+			color 0.3s var(--ease);
+	}
+
+	.menu-link:hover .menu-link__flecha,
+	.menu-link:focus-visible .menu-link__flecha {
+		color: var(--dorado);
+		transform: translateX(3px);
 	}
 
 	.menu-link .desplegable__chevron {
@@ -544,6 +643,10 @@ const redes = [
 	}
 
 	.menu-link.is-active {
+		color: var(--dorado);
+	}
+
+	.menu-link.is-active .menu-link__flecha {
 		color: var(--dorado);
 	}
 
@@ -574,8 +677,13 @@ const redes = [
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem 2rem;
-		padding-top: 1.25rem;
-		border-top: 1px solid var(--dorado);
+		padding-top: 1rem;
+		border-top: 1px solid rgb(212 161 78 / 0.45);
+	}
+
+	.menu-redes a {
+		color: var(--azul-bruma);
+		font-size: 0.6875rem;
 	}
 
 	.marca:focus-visible,
@@ -617,6 +725,7 @@ const redes = [
 		}
 
 		.menu-toggle,
+		.menu-velo,
 		.menu-panel,
 		.menu-panel:not([hidden]) {
 			display: none;
@@ -638,8 +747,12 @@ const redes = [
 		.site-header::before,
 		.marca,
 		.site-nav__link::after,
-		.desplegable__chevron {
+		.desplegable__chevron,
+		.menu-toggle__icono span,
+		.menu-panel:not([hidden]),
+		.menu-velo {
 			transition: none;
+			animation: none;
 		}
 	}
 

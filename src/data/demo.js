@@ -486,6 +486,16 @@ export const artista = {
 		),
 		hotspot: { x: 0.4, y: 0.35, width: 1, height: 1 },
 	},
+	// Página Contacto: foto grande de arriba (riéndose en el taller, entre cuadros y dibujos en el piso).
+	fotoContacto: {
+		...foto(
+			'celia-taller-risa.webp',
+			960,
+			1280,
+			'Celia Gómez Perea riéndose, sentada en el piso de su taller violeta, entre cuadros, dibujos y su caja de herramientas naranja.',
+		),
+		hotspot: { x: 0.75, y: 0.55, width: 1, height: 1 },
+	},
 	// Página La artista: fondo de la franja de la frase (materiales de trabajo sobre el piso).
 	fondoFrase: {
 		...foto(

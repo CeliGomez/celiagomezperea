@@ -38,7 +38,7 @@ const cifras = [
 	<header class="sobre-hero ctx-azul ctx-azul--profundo textura">
 		<div class="sobre-hero__inner contenedor">
 			<div class="sobre-hero__texto">
-				<p class="sobre-etiqueta sobre-etiqueta--dorada">La artista</p>
+				<p class="sobre-etiqueta sobre-etiqueta--dorada">Sobre mí</p>
 				<h1 class="sobre-hero__nombre">{artista?.nombre}</h1>
 				<span class="filete filete--largo" aria-hidden="true" />
 				{artista?.subtitulo && <p class="sobre-hero__subtitulo">{artista.subtitulo} · Chubut, Patagonia argentina</p>}
@@ -483,8 +483,9 @@ const cifras = [
 		gap: 2.5rem;
 	}
 
+	/* Celular y tablet: la foto va de borde a borde arriba de la franja. */
 	.sobre-bio__foto {
-		margin: 0;
+		margin: calc(-1 * clamp(4rem, 8vw, 7rem)) calc(-1 * var(--gutter)) 0;
 	}
 
 	.sobre-bio__foto img {
@@ -699,23 +700,31 @@ const cifras = [
 		text-align: center;
 	}
 
-	/* Foto redonda-ovalada, como un retrato de despedida. */
+	/* Foto entera (sin recorte), con el filete dorado corrido detrás. */
 	.sobre-cierre__foto {
+		position: relative;
 		justify-self: center;
-		width: min(70%, 18rem);
-		margin: 0;
+		width: min(calc(100% - 1rem), 24rem);
+		margin: 0 0 1rem;
+		isolation: isolate;
+	}
+
+	.sobre-cierre__foto::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 1px solid rgb(212 161 78 / 0.6);
+		transform: translate(1rem, 1rem);
 	}
 
 	.sobre-cierre__foto img {
 		display: block;
 		width: 100%;
 		height: auto;
-		aspect-ratio: 4 / 5;
+		aspect-ratio: 3 / 4;
 		object-fit: cover;
-		object-position: 30% 35%;
-		border-radius: 50% / 40%;
-		outline: 1px solid rgb(212 161 78 / 0.5);
-		outline-offset: 0.6rem;
+		box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.6);
 	}
 
 	.sobre-cierre__titulo {
@@ -789,16 +798,37 @@ const cifras = [
 			justify-self: end;
 		}
 
-		.sobre-bio__inner {
-			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-			align-items: start;
-			gap: clamp(3rem, 7vw, 7rem);
+		/* La foto ocupa toda la mitad izquierda de la franja, de borde a borde. */
+		.sobre-bio {
+			padding-block: 0;
 		}
 
-		/* La foto queda fija mientras se lee la biografía. */
+		.sobre-bio__inner.contenedor {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+			align-items: stretch;
+			gap: 0;
+			max-width: none;
+			padding-inline: 0;
+		}
+
 		.sobre-bio__foto {
-			position: sticky;
-			top: 7rem;
+			position: relative;
+			min-height: 40rem;
+		}
+
+		.sobre-bio__foto img {
+			position: absolute;
+			inset: 0;
+			height: 100%;
+			aspect-ratio: auto;
+			object-position: 55% 50%;
+		}
+
+		.sobre-bio__texto {
+			align-self: center;
+			padding-block: clamp(4rem, 8vw, 7rem);
+			padding-left: clamp(3rem, 6vw, 6rem);
+			padding-right: max(var(--gutter), calc((100vw - var(--ancho-max)) / 2 + var(--gutter)));
 		}
 
 		.sobre-statement__inner {
@@ -816,11 +846,11 @@ const cifras = [
 			grid-template-columns: auto minmax(0, 1fr);
 			align-items: center;
 			gap: clamp(3rem, 7vw, 6rem);
-			max-width: 60rem;
+			max-width: 68rem;
 		}
 
 		.sobre-cierre__grilla--foto .sobre-cierre__foto {
-			width: 18rem;
+			width: min(30vw, 28rem);
 		}
 
 		.sobre-cierre__grilla--foto .sobre-cierre__inner {
