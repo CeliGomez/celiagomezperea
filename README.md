@@ -1,6 +1,6 @@
-# Webgalery
+# Celia Gómez Perea — sitio web
 
-Sitio estático de una artista visual. Astro genera el HTML en el build; el contenido sale de Sanity.
+Sitio de la artista visual Celia Gómez Perea (celiagomezperea.com). Astro genera el HTML en el build: los cuadros y las ilustraciones salen de Sanity, y el resto del contenido está fijo en `src/data/demo.js`.
 
 ## Variables de entorno
 
@@ -16,7 +16,7 @@ En Vercel, y en un `.env` local:
 
 `SITE` arma el sitemap y las URLs canónicas. Si no está definida en Vercel, se usa el dominio de producción del proyecto.
 
-Hay un `.env.example` en la raíz y otro en `studio/` para copiar como `.env`.
+En local, el `.env` de la raíz lleva `SANITY_PROJECT_ID` y `SANITY_DATASET`; el de `studio/` lleva `SANITY_STUDIO_PROJECT_ID` y `SANITY_STUDIO_DATASET`.
 
 ## Comandos
 
@@ -30,7 +30,6 @@ npm run build
 
 ```sh
 cd studio
-cp .env.example .env   # completar SANITY_STUDIO_PROJECT_ID
 npm install
 npm run dev            # en local: http://localhost:3333
 npm run deploy         # publica el panel en https://<nombre>.sanity.studio
@@ -43,7 +42,14 @@ Después del deploy, Celia carga desde esa URL, sin tocar el código. El panel t
 - **Ilustraciones → 1 · Obras / 2 · Ilustraciones**: lo mismo, para obras de ilustraciones sobre papel. Se ven en la sección Ilustraciones.
 - **Ilustraciones → Ilustraciones sueltas**: piezas sin obra.
 
-El resto del sitio (inicio, la artista, audiovisual, contacto) es contenido fijo en `src/data/demo.js`.
+El resto del sitio (inicio, sobre mí, audiovisual, contacto) es contenido fijo en `src/data/demo.js`. Los videos de Audiovisual están en la lista `videosVimeo` de ese archivo.
+
+### Cómo se identifica cada pieza
+
+Las piezas no tienen nombre propio: se nombran por su obra y su número (el orden de «Lugar dentro de la obra»). Cada una tiene un código corto, por ejemplo **VVB-03** = *Una vez vi blanco*, N.º 3. La sigla se arma sola con las iniciales del nombre de la obra, o se carga a mano en el campo «Sigla» de la obra.
+
+- Si el título de una pieza está todo en minúscula (por ejemplo «unavez3»), la web la muestra como **Sin título**. Si tiene nombre propio, se escribe con mayúscula.
+- El botón «Consultar por WhatsApp» de cada pieza abre WhatsApp con un mensaje ya escrito que incluye la obra, el número, el código y el link.
 
 La primera vez, con el proyecto de Sanity vacío, hay que crear las dos disciplinas (Pinturas e Ilustraciones):
 
@@ -55,10 +61,11 @@ npx sanity documents create datos-iniciales/disciplinas.json --missing
 ## Antes del lanzamiento
 
 - [ ] En Vercel: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `PUBLIC_WEB3FORMS_KEY`, `SITE=https://celiagomezperea.com` e `INDEXAR=true` (solo Production).
-- [ ] Deploy Hook de Vercel conectado al webhook de Sanity (sección siguiente).
+- [x] Deploy Hook de Vercel conectado al webhook de Sanity (sección siguiente).
 - [ ] Studio publicado con `npm run deploy`.
-- [ ] Email y WhatsApp en `src/data/demo.js` → `configuracion`. Sin WhatsApp, el botón de consulta de cada obra lleva al formulario con la obra ya escrita.
-- [ ] Disciplinas creadas con `npx sanity documents create datos-iniciales/disciplinas.json --missing` (desde `studio/`).
+- [x] Email y WhatsApp en `src/data/demo.js` → `configuracion`.
+- [x] Disciplinas creadas.
+- [ ] Google Search Console: agregar el dominio y enviar `sitemap-index.xml`.
 - [ ] Envío de prueba del formulario y confirmar que llega el mail.
 - [ ] DNS de celiagomezperea.com apuntando a Vercel.
 
@@ -83,3 +90,7 @@ El sitio no se actualiza solo: cada cambio publicado tiene que disparar un build
 7. Publicá un cambio chico en Sanity y confirmá en Vercel que arrancó un deployment.
 
 El hook dispara el build. No hace falta un servidor ni una ruta de API en el sitio.
+
+## Redirecciones
+
+`vercel.json` manda las direcciones viejas a las nuevas: `/obras` y `/obras/pinturas` → `/series` (Cuadros), `/la-artista` → `/sobre-mi`.

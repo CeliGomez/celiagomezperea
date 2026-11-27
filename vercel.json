@@ -1,0 +1,7 @@
+{
+  "redirects": [
+    { "source": "/obras", "destination": "/series", "permanent": true },
+    { "source": "/obras/pinturas", "destination": "/series", "permanent": true },
+    { "source": "/la-artista", "destination": "/sobre-mi", "permanent": true }
+  ]
+}

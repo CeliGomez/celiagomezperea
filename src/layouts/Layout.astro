@@ -28,7 +28,8 @@ const pie = await fetchPie();
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 const texto = String(description || '').replace(/\s+/g, ' ').trim();
 const meta = texto.length > 160 ? `${texto.slice(0, 157).replace(/\s+\S*$/, '').trim()}…` : texto;
-const imagenOg = ogImage ? new URL(ogImage, Astro.site ?? Astro.url).href : '';
+// Sin imagen propia, se comparte la tarjeta general del sitio (public/og-celia.jpg, 1200×630).
+const imagenOg = new URL(ogImage || '/og-celia.jpg', Astro.site ?? Astro.url).href;
 // Mientras el sitio sea una demo no se indexa. En el lanzamiento: definir INDEXAR=true.
 const indexar = ['true', '1', 'si', 'sí'].includes(
   String(import.meta.env.INDEXAR ?? process.env.INDEXAR ?? '').trim().toLowerCase(),
